@@ -209,17 +209,19 @@ The regression model, **lm_model** predicts highway fuel economy (hwy, in mpg) a
 
 -   **Statistical Significance**:
 
-The p-value for displ is very small (< 2.2e-16), meaning the relationship is statistically significant. Engine size is a strong/meaningful predictor of fuel efficiency.
+The p-value for displ is very small (\< 2.2e-16), meaning the relationship is statistically significant. Engine size is a strong/meaningful predictor of fuel efficiency.
 
 -   **Model Fit**:
 
     -   The **multiple R-squared** (0.5868) and **adjusted R-squared** (0.585) indicate that approximately 58.68% of the variability in highway fuel economy is explained by engine displacement. This suggests a moderately strong negative relationship, but other factors (e.g., vehicle weight, transmission type) may also play a role.
 
-
 #### **Implication of Model Outputs**
 
--   The **negative coefficient** for *displ* (-3.5306) supports the belief that cars with smaller engines have better fuel efficiency. As engine size increases, highway fuel economy decreases significantly, with a 1-liter increase in displacement leading to a 3.53 mpg reduction in fuel efficiency, on average.
+-   The **negative coefficient** for *displ* (-3.5306) supports the belief that cars with smaller engines have better fuel efficiency. As engine size increases, highway fuel economy decreases significantly, with a 1-liter increase in displacement leading to a 3.53 mpg reduction in fuel efficiency, on average. The highly significant **p-values** for both the displ coefficient and the overall model (\< 2e-16) confirm that the negative relationship between engine size and fuel efficiency is *not due to random chance*. This strengthens the conclusion that engine size is a reliable predictor of fuel efficiency.
 
--   The highly significant **p-values** for both the displ coefficient and the overall model (\< 2e-16) confirm that the negative relationship between engine size and fuel efficiency is not due to random chance. This strengthens the conclusion that engine size is a reliable predictor of fuel efficiency.
+-   The **R-squared value** (0.5868) indicates that engine size alone doesn't explain all the variability in fuel efficiency, so the remaining 41.32% of variability implies other factors (like, vehicle weight, car transmission type, or car drive type) also influence fuel efficiency.
 
--   The **R-squared value** (0.5868) indicates that engine displacement explains a significant portion (58.68%) of the variation in highway fuel economy. However, the remaining 41.32% of variability implies other factors (like, vehicle weight, car transmission type, or car drive type) also influence fuel efficiency.
+## Part 2: Data Smoothing
+
+
+

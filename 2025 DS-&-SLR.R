@@ -228,5 +228,43 @@ plot(mpg$displ, lm_model$residuals, xlab="predictor (displ)", ylab="Residuals", 
 # Quantile-Quantile Plot
 qqnorm(lm_model$residuals)
 qqline(lm_model$residuals) # adds the diagonal line
- 
+
+
+## ====  Part 2: Data Smoothing =====
+# Traffic Flow Data Analysis
+# Traffic flow data
+hour <- 6:18
+vehicles <- c(200, 350, 500, 420, 380, 300, 250, 220, 200, 280, 400, 550, 600)
+traffic <- data.frame(hour, vehicles)
+
+#(a)
+running_mean <- sapply(2:(length(vehicles)-1), function(i) mean(vehicles[(i-1):(i+1)]))
+hours_smooth <- hour[2:(length(hour)-1)]
+plot(hour, vehicles, type = "p", main = "Running Mean (Manual)", xlab = "Hour", ylab = "Vehicles")
+lines(hours_smooth, running_mean, type = "l", col = "blue")
+
+#(b)
+ks <- ksmooth(hour, vehicles, kernel = "box", bandwidth = 1)
+plot(hour, vehicles, main = "ksmooth (Box kernel)", xlab = "Hour", ylab = "Vehicles")
+lines(ks, col = "blue")
+
+#(c)
+ks_gauss <- ksmooth(hour, vehicles, kernel = "normal", bandwidth = 2)
+plot(hour, vehicles, main = "ksmooth (Gaussian kernel)", xlab = "Hour", ylab = "Vehicles")
+lines(ks_gauss, col = "blue")
+
+#(d)
+ks_gauss2 <- ksmooth(hour, vehicles, kernel = "normal", bandwidth = 1)
+lines(ks_gauss2, col = "red") # Compare with previous
+
+#(e)
+lo <- loess(vehicles ~ hour, data = traffic, span = 0.3, degree = 2)
+hour_seq <- seq(6, 18, 0.1)
+lo_pred <- predict(lo, newdata = data.frame(hour = hour_seq))
+plot(hour, vehicles, main = "LOESS Smoother", xlab = "Hour", ylab = "Vehicles")
+lines(hour_seq, lo_pred, col = "purple")
+
+
+
+
 
