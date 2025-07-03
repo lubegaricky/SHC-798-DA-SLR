@@ -1,0 +1,41 @@
+---
+title: "Data Analysis & Simple Linear Regression"
+author: "Richard Lubega"
+date: "`r Sys.Date()`"
+output: html_document
+pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 1
+
+## Part 1: Data Analysis with R
+
+```{r, Part-1}
+# Getting Started with the Dataset:
+pacman::p_load(ggplot2) # checks if ggplot2 is installed;if it's not installed, it automatically installs it first, then loads it. If it's already installed, it just loads it into your current R session
+
+head(mpg) # View first few rows of the dataset
+summary(mpg) # Get an overview of the dataset
+
+# --- Add ----
+str(mpg)
+view(mpg)
+# -------------
+
+#Analyse the mpg dataset using descriptive methods
+
+#(a)
+# average city and highway fuel economy across all vehicle classes
+afe <- aggregate(cbind(cty, hwy) ~ class, data = mpg, FUN = mean)
+afe
+
+
+
+
+
+```
