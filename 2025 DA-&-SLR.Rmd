@@ -15,27 +15,211 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Part 1: Data Analysis with R
 
-```{r, Part-1}
+```{r, Part-1-a_b}
 # Getting Started with the Dataset:
-pacman::p_load(ggplot2) # checks if ggplot2 is installed;if it's not installed, it automatically installs it first, then loads it. If it's already installed, it just loads it into your current R session
+cat("\n=== Getting Started with the Dataset ===\n")
+pacman::p_load(ggplot2) # checks if ggplot2 is installed;if it's not installed, it automatically installs it first, then loads it. If it's already installed, it just loads it into the current R session
+pacman::p_load(tidymodels) # tidymodels some useful packages and functionalities
 
+cat("\n=== View first few rows of the dataset ===\n")
 head(mpg) # View first few rows of the dataset
+
+cat("\n=== Get an overview of the dataset ===\n")
 summary(mpg) # Get an overview of the dataset
 
 # --- Add ----
 str(mpg)
-view(mpg)
+# view(mpg)
 # -------------
 
 #Analyse the mpg dataset using descriptive methods
 
 #(a)
 # average city and highway fuel economy across all vehicle classes
+cat("\n=== Average city and highway fuel economy, afe, across all vehicle classes ===\n")
 afe <- aggregate(cbind(cty, hwy) ~ class, data = mpg, FUN = mean)
 afe
 
+#(b)
+# Compare the fuel efficiency (cty and hwy)
+cat("\n=== Comparing fuel efficiency for cty and hwy economies ===\n")
+par(mfrow = c(1, 2)) # Set up a 1x2 plot layout for side-by-side boxplots
 
+# Boxplot for city mpg by cylinders
+boxplot(cty ~ cyl, data = mpg, 
+        main = "City mpg by Number of Cylinders", 
+        xlab = "Cylinders", 
+        ylab = "City mpg (miles per gallon)")
 
+# Boxplot for highway mpg by cylinders
+boxplot(hwy ~ cyl, data = mpg, 
+        main = "Highway mpg by Number of Cylinders", 
+        xlab = "Cylinders", 
+        ylab = "Highway mpg (miles per gallon)")
 
+par(mfrow = c(1, 1)) # Reset plot layout to default
+
+# Combine plots by faceting
+cat("\n=== Combining the box plots for comparison ===\n")
+mpg_comb <- mpg %>%
+  select(cyl, cty, hwy) %>%
+  pivot_longer(cols = c(cty, hwy), names_to = "fuel_econ", values_to = "mpg")
+
+ggplot(mpg_comb, aes(x = factor(cyl), y = mpg, fill = fuel_econ)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Fuel Efficiency by Number of Cylinders",
+       x = "Number of Cylinders",
+       y = "miles per gallon",
+       fill = "Fuel Economy") +
+  scale_fill_manual(values = c("cty" = "lightblue", "hwy" = "lightcoral"),
+                    labels = c("City", "Highway")) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+#---------  Median Values by cylinder count -------------
+cat("\n=== Median Values by cylinder count ===\n")
+mpg %>%
+  group_by(cyl) %>%
+  summarise(
+    median_cty = median(cty),
+    median_hwy = median(hwy),
+    .groups = 'drop'
+  )
+
+cat("\n=== Trend Analysis ===\n")
+```
+
+#### **Commenting on the Trend**
+
+This analysis clearly demonstrates that engine size (cylinder count) is a major predictor of fuel efficiency, with smaller engines being visibly more fuel-efficient than larger ones. Some *outliers* exist (may be due to high-efficiency hybrids or low-efficiency compact cars).
+
+-   **Inverse relationship:** Based on the boxplots (where more cylinders = lower mpg), there's a clear *negative* correlation between the number of cylinders and fuel efficiency (mpg). As cylinder count increases, both city and highway mpg decrease.
+
+-   **Highway vs City efficiency:** Highway mpg is consistently higher than city mpg across all cylinder counts (as seen from the combined plot), which may be explained by the more efficient cruising speeds on highways. Generally, the **fuel efficiency difference** between city and highway driving becomes more pronounced in vehicles with fewer cylinders.
+
+-   **4-cylinder cars** are the most fuel-efficient, with median values of 21 mpg (for city) and 29 mpg (for highway). The rest in each category have lower values. **8-cylinder cars** are the least fuel-efficient, with median values of 13 mpg ( for city) and 17 mpg (for highway).
+
+-   **5-cylinder cars** are the least common (narrower range) in both categories. This may be due to fewer models of these cars. **6-cylinder cars** have the most broad range compared to the others
+
+-   There is also **variability within cylinder** groups, and is most pronounced in **6-cylinder cars**, whch suggests that factors beyond cylinder count (including vehicle weight, engine technology, etc.) also influence fuel efficiency.
+
+```{r, Part-1-c}
+# (c)
+# Correlation: Engine Displacement vs Highway Fuel Economy
+cat("\nCorrelation: engine displacement (displ) and highway fuel economy (hwy) \n") 
+
+# Calculate correlation coefficient
+correlation_pearson <- cor(mpg$displ, mpg$hwy)
+correlation_spearman <- cor(mpg$displ, mpg$hwy, method = "spearman")
+
+cat("Pearson correlation coefficient:", round(correlation_pearson, 4), "\n")
+cat("Spearman correlation coefficient:", round(correlation_spearman, 4), "\n")
+
+# Interpretation of correlation strength
+interpret_correlation <- function(r) {
+  abs_r <- abs(r)
+  if (abs_r >= 0.7) return("Strong")
+  else if (abs_r >= 0.3) return("Moderate")
+  else return("Weak")
+}
+
+cat("Correlation strength:", interpret_correlation(correlation_pearson), "\n")
+cat("Direction:", ifelse(correlation_pearson > 0, "Positive", "Negative"), "\n")
+
+# Create basic scatter plot
+cat("\n=== Creating a Basic Scatter Plot ===\n")
+
+# Basic scatter plot
+plot_dh <- ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(alpha = 0.9, size = 2, color = "black") +
+    labs(
+    title = "Engine Displacement vs Highway Fuel Economy",
+    subtitle = paste("Pearson r =", round(correlation_pearson, 3)),
+    x = "Engine Displacement (l)",
+    y = "Highway Fuel Economy (mpg)",
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5),
+    axis.title = element_text(size = 11),
+    panel.grid.minor = element_blank()
+  )
+
+print(plot_dh)
+
+cat("\nTest the significance of the correlation \n")
+cor_test <- cor.test(mpg$displ, mpg$hwy, method = "pearson")
+cat("Pearson correlation test:\n")
+print(cor_test)
+cat("\nSignificance level: ", ifelse(cor_test$p.value < 0.001, "p < 0.001 (highly significant)", 
+                                   ifelse(cor_test$p.value < 0.01, "p < 0.01 (significant)", 
+                                          ifelse(cor_test$p.value < 0.05, "p < 0.05 (significant)", "not significant"))), "\n")
 
 ```
+
+Therefore, based on the analysis, a **strong negative**, **highly** statistically **significant** correlation exists between engine displacement (displ) and highway fuel economy (hwy).
+
+The scatter plot reinforces this because as displacement increases, highway mpg decreases.
+
+```{r, Part-1-d}
+# Linear regression
+cat("\n Linear Regression Model \n")
+lm_model <- lm(hwy ~ displ, data = mpg)
+summary(lm_model)
+plot(mpg$displ, mpg$hwy)+
+  abline(lm_model, col = "red")
+
+cat("\n Model Diagnostics \n")
+# Diagnostics plots
+# par(mfrow = c(2,2))
+# plot(lm_model)
+
+# Tukey-Anscombe Plot
+plot(lm_model$fitted.values, lm_model$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lm_model$fitted.values, lm_model$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+plot(mpg$displ, lm_model$residuals, xlab="predictor (displ)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor displ") +
+  lines(loess.smooth(mpg$displ, lm_model$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lm_model$residuals) #Quantile-Quantile Plot
+qqline(lm_model$residuals) # adds the diagonal line
+
+```
+
+From **Model diagnostics plots** , the errors have a relatively constant variance and their expectation can be considered zero (Tuskey-Anscombe plot). The Q-Q plot indicates that the residuals are approximately Gaussian distributed in the central region but exhibit heavy tails (skewness) and some outliers at the extremes.
+
+Although the noticeable presence of extreme positive residuals suggests a right-skewed distribution (departure from normality), the approximation to normality in the center may be sufficient to validate this model.
+
+#### **Comment on Model Outputs**:
+
+The regression model, **lm_model** predicts highway fuel economy (hwy, in mpg) as a function of engine displacement (displ, in litres).
+
+-   **Regression Coefficients**:
+
+    -   **Intercept** (35.6977) implies that when engine displacement is theoretically 0 litres, the predicted highway fuel economy is approximately 35.7 mpg. It's p-value (\< 2e-16) is very small and indicates that it is statistically significant.
+
+    -   **Slope** (-3.5306): For each 1-litre increase in engine displacement, highway fuel economy decreases by approximately 3.53 mpg, on average. The t-value (-15.07) and p-value (\< 2e-16) indicate this coefficient is highly significant, confirming a strong negative relationship.
+
+-   **Statistical Significance**:
+
+The p-value for displ is very small (< 2.2e-16), meaning the relationship is statistically significant. Engine size is a strong/meaningful predictor of fuel efficiency.
+
+-   **Model Fit**:
+
+    -   The **multiple R-squared** (0.5868) and **adjusted R-squared** (0.585) indicate that approximately 58.68% of the variability in highway fuel economy is explained by engine displacement. This suggests a moderately strong negative relationship, but other factors (e.g., vehicle weight, transmission type) may also play a role.
+
+
+#### **Implication of Model Outputs**
+
+-   The **negative coefficient** for *displ* (-3.5306) supports the belief that cars with smaller engines have better fuel efficiency. As engine size increases, highway fuel economy decreases significantly, with a 1-liter increase in displacement leading to a 3.53 mpg reduction in fuel efficiency, on average.
+
+-   The highly significant **p-values** for both the displ coefficient and the overall model (\< 2e-16) confirm that the negative relationship between engine size and fuel efficiency is not due to random chance. This strengthens the conclusion that engine size is a reliable predictor of fuel efficiency.
+
+-   The **R-squared value** (0.5868) indicates that engine displacement explains a significant portion (58.68%) of the variation in highway fuel economy. However, the remaining 41.32% of variability implies other factors (like, vehicle weight, car transmission type, or car drive type) also influence fuel efficiency.
