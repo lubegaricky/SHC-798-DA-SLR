@@ -265,6 +265,199 @@ plot(hour, vehicles, main = "LOESS Smoother", xlab = "Hour", ylab = "Vehicles")
 lines(hour_seq, lo_pred, col = "purple")
 
 
+## Part 3: Simple regression
+# Question 1
+
+# The dataset cars
+# A SLR to analyse the relationship between speed and stopping distance
+
+cat("\n Test SLR between speed and stopping distance \n")
+lm_s.sd <- lm(dist ~ speed, data = cars)
+summary(lm_s.sd)
+
+cat("\n ===  SLR Model Plot  === \n")
+plot(cars$speed, cars$dist)
+abline(lm_s.sd, col = "blue")
+
+# (a)
+# From the model summary, Multiple R-squared:  0.6511,	Adjusted R-squared:  0.6438
+# Thus, 65.11% of the variation in stopping distance is explained by speed
+
+# (b)
+# Intercept (-17.5791): This means that for a theoretical speed of 0 mph the predicted stopping distance is -17.5791 feet (this is not practically rational but ensures the regression line fits the data best within the observed speed range. It is not meaningful to extrapolate to speed = 0.
+  # It's p-value (0.0123) is small and statistically significant at the 5% level, but its practical importance is limited.
+
+# Slope (3.9324): For every 1 mph increase in speed, stopping distance increases by about 3.9324 feet. Higher driving speeds require longer stopping distances.
+  # The p-value (1.49e-12) is much smaller than 0.05 (even at a 1% significance level), so the relationship between speed and stopping distance is statistically significant.
+  # We reject the null hypothesis that speed has no effect on stopping distance. Thus, speed has an considerable impact on stopping distance.
+
+# (c)
+# Predicting stopping distance for  speed = 20 mph;  compute a 95% prediction interval.
+
+predict(lm_s.sd, newdata = data.frame(speed = 20), interval = "prediction", level = 0.95)
+
+# (d)
+cat("Evaluating Model Assumptions \n")
+cat("\n ===  Model Diagnostics Plots  === \n")
+# Diagnostics plots
+par(mfrow = c(2,2))
+plot(lm_s.sd)
+
+par(mfrow = c(1,1))
+# Tukey-Anscombe Plot
+plot(lm_s.sd$fitted.values, lm_s.sd$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lm_s.sd$fitted.values, lm_s.sd$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+plot(cars$speed, lm_s.sd$residuals, xlab="predictor (speed)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor displ") +
+  lines(loess.smooth(cars$speed, lm_s.sd$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lm_s.sd$residuals) #Quantile-Quantile Plot
+qqline(lm_s.sd$residuals) # adds the diagonal line
+
+# Evaluating Model Assumptions
+cat("Model Assumption Evaluation \n")
+cat("\n ===  Linearity  === \n")
+# From the Tukey-Anscombe Plot (Residuals vs. Fitted):
+  # By inspection, the residuals generally hover around the zero line which suggests that they likely have a mean of approximately zero
+  # There is, however, slight curvature in the red LOESS line which implies mild (misspecified) non-linearity. This is confirmed by the systematic misprediction in the middle (overpredicting) and the extremes (underpredicting).
+  # **Transformation**: Add a quadratic term (dist = β~0~ + β~1~ . speed + β~2~ . speed^2^ + E~i~) to fix this and improve the model (as the true relationship is quadratic).
+
+cat("\n ===  Homoskedasticity  === \n")
+# From the Scale-Location Plot:
+  # The red line is slightly upward-trending, indicating that variance increases with fitted values (minor heteroscedasticity)
+  # The Tukey-Anscombe plot also seems to indicate that the scatter is not constant for the entire range of speed/fitted values (less scatter for lower values and more scatter for higher values).
+  # There is an obvious violation of homoskedasticity.
+  # **Transformation**: Log-transform on dist (since stopping distance cannot be negative)
+
+cat("\n ===  Independence  === \n")
+  # Since the data is not time-dependent, independence is likely satisfied (no autocorrelation expected)
+  # **Transformation**: None needed
+
+cat("\n ===  Normality  === \n")
+# From the Q-Q Plot: 
+  # The bulk of the residuals (in the central region) are approximately Gaussian distributed.
+  # A noticeable deviations (or outliers) at the upper tail indicates right skewness hence departure from normality.
+  # The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
+  # **Transformation**: Log-transform on dist to correct right-skewness (improve normality and heteroskedasticity)
+
+cat("\n ===  Model Evaluation and Improvements  ==== \n")
+# Therefore, this model (lm_s.sd = dist ~ speed) has minor assumption violations (non-linearity, heteroscedasticity, non-normality).
+# Suggested transformations like the log(dist) ~ speed and a quadratic term can be made and the diagnostics re-checked.
+# The best model is the one with the most stable residuals, best-fulfilled assumptions, and highest adjusted R².
+
+## Part 3: Simple regression
+# Question 2
+
+# housing.rda
+# pax.data <- read.delim(file.choose(), header = TRUE, na.strings = c("NA"))
+# amb.data <- read.delim(file.choose(), header = TRUE, na.strings = c("NA"))
+# brk.dat <- read.delim(file.choose(), header = TRUE, na.strings = c("NA"))
+# load(file.choose())
+
+load(file.choose())
+head(housing)
+
+# Explore the data
+head(housing) # View first few rows of the dataset
+summary(housing) # Get an overview of the dataset
+
+is.na(housing) # any NA? Boolean
+sum(is.na(housing)) # Count total NA values across the entire dataset
+sapply(housing, function(x) sum(is.na(x))) # Count NA values by column
+
+housing %>% ## Count NA values by column (in dplyr)
+  summarise_all(~sum(is.na(.))) 
+
+housing %>%  # Another alternative of the above
+  summarise(across(everything(), ~sum(is.na(.))))
+
+# --- Add ----
+str(housing)
+view(housing)
+# -------------
+
+# Load the housing.rda data file
+load(file.choose())
+head(housing) # View first few rows of the dataset
+summary(housing) # Get an overview of the dataset
+str(housing)
+
+# using regression analysis to explore the relationship between house size and price.
+
+# (a)
+# Fit a simple regression model.
+cat("\n A SLR between house prices and house size \n")
+lm_p.s <- lm(price ~ size, data = housing)
+summary(lm_p.s)
+
+cat("\n ===  SLR Model Plot  === \n")
+plot(housing$size, housing$price) +
+  abline(lm_p.s, col = "red")
+
+# Comment on the model summary
+
+
+# (b) 
+# Perform residual diagnostics and comment on model assumptions
+cat("Performing Model Diagnostics \n")
+cat("\n ===  Model Diagnostics Plots  === \n")
+# Diagnostics plots
+par(mfrow = c(2,2))
+plot(lm_p.s)
+
+par(mfrow = c(1,1))
+# Tukey-Anscombe Plot
+plot(lm_p.s$fitted.values, lm_p.s$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lm_p.s$fitted.values, lm_p.s$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+plot(housing$size, lm_p.s$residuals, xlab="predictor (size)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor size") +
+  lines(loess.smooth(housing$size, lm_p.s$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lm_p.s$residuals) #Quantile-Quantile Plot
+qqline(lm_p.s$residuals) # adds the diagonal line
+
+# Evaluating Model Assumptions
+cat("Model Assumption Evaluation \n")
+# 1.  **Linearity**: *From the Tukey-Anscombe Plot (Residuals vs. Fitted)*:
+#   
+#   -   By inspection, the residuals generally hover around the zero line which suggests that they likely approximate a mean of zero. There is, however, slight curvature (a kink) in the red LOESS smoother line (deviation from the horizontal) which implies mild (misspecified) non-linearity. This is confirmed by the systematic misprediction in the middle (overpredicting) and the extremes (underpredicting). In this case, there is is a clear violation of the linearity (E[E~*i*~] = 0 ) assumption; a straight line is not the correct fit to the data and the model ought to be improved.
+# 
+# -   **Transformation**: Add a quadratic term (dist = β~0~ + β~1~ . speed + β~2~ . speed^2^ + E~*i*~) to fix this and improve the model (as for this pair, the true relationship is quadratic). This constitutes a multiple linear regression problem.
+# 
+# 2.  **Homoskedasticity**: *From the Scale-Location Plot*:
+#   
+#   -   The red line is slightly upward-trending, indicating that variance increases with fitted values (minor heteroscedasticity)
+# -   The Tukey-Anscombe plot also seems to indicate that the scatter is not constant for the entire range of speed/fitted values (less scatter for lower values and more scatter for higher values). There is an obvious violation of homoskedasticity.
+# -   **Transformation**: Log-transform on dist (since stopping distance cannot be negative)
+# 
+# 3.  **Independence**
+#   
+#   -   Since the data is *not time-dependent*, residual independence is likely satisfied (no autocorrelation expected)
+# -   **Transformation**: None needed
+# 
+# 4.  **Normality**: *From the Q-Q Plot*:
+#   
+#   -   The bulk of the residuals (in the central region) are approximately Gaussian distributed. A noticeable deviations (or outliers) at the upper tail indicates right skewness hence departure from normality. The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
+# -   **Transformation**: Log-transform on dist to correct right-skewness (improve normality and heteroskedasticity)
+# 
+# #### **Model Evaluation and Improvements**
+# 
+# -   Therefore, this model (lm_s.sd = dist \~ speed) has minor assumption violations (non-linearity, heteroscedasticity, non-normality).
+# 
+# -   Suggested transformations like the log(dist) \~ speed and a quadratic term can be made and the diagnostics re-checked. The best model is the one with the most stable residuals, best-fulfilled assumptions, and highest adjusted R².
+
 
 
 
