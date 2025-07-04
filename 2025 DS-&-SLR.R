@@ -432,25 +432,31 @@ qqline(lm_p.s$residuals) # adds the diagonal line
 cat("Model Assumption Evaluation \n")
 # 1.  **Linearity**: *From the Tukey-Anscombe Plot (Residuals vs. Fitted)*:
 #   
-#   -   By inspection, the residuals generally hover around the zero line which suggests that they likely approximate a mean of zero. There is, however, slight curvature (a kink) in the red LOESS smoother line (deviation from the horizontal) which implies mild (misspecified) non-linearity. This is confirmed by the systematic misprediction in the middle (overpredicting) and the extremes (underpredicting). In this case, there is is a clear violation of the linearity (E[E~*i*~] = 0 ) assumption; a straight line is not the correct fit to the data and the model ought to be improved.
+#   -   From the plot, the residuals generally hover around the zero line which suggests that the E[E~*i*~] = 0 is approximately met.
+# However, LOESS smoother line has a kink in the middle and largely deviates from the horizontal.
+# The residuals for low  and high house size (and respective fitted house price) values are systematically negative and positive for medium values.
+# The linearity assumption is violated and a straight line is not the correct fit to the data
+# The model ought to be improved by variable transformation.
+
 # 
-# -   **Transformation**: Add a quadratic term (dist = β~0~ + β~1~ . speed + β~2~ . speed^2^ + E~*i*~) to fix this and improve the model (as for this pair, the true relationship is quadratic). This constitutes a multiple linear regression problem.
-# 
-# 2.  **Homoskedasticity**: *From the Scale-Location Plot*:
+# 2.  **Homoskedasticity**: *From the Tukey-Anscombe plot and Scale-Location Plot*:
 #   
-#   -   The red line is slightly upward-trending, indicating that variance increases with fitted values (minor heteroscedasticity)
-# -   The Tukey-Anscombe plot also seems to indicate that the scatter is not constant for the entire range of speed/fitted values (less scatter for lower values and more scatter for higher values). There is an obvious violation of homoskedasticity.
-# -   **Transformation**: Log-transform on dist (since stopping distance cannot be negative)
+ # -    The Tukey-Anscombe plot indicates a more or less constant scatter for the entire range of house size (& fitted) values.
+#   There is no obvious violation of homoskedasticity.
+#  - The red line in the Scale-Location Plot is fairly horizontal which implies constant variance with fitted values (no heteroscedasticity)
+
 # 
 # 3.  **Independence**
 #   
-#   -   Since the data is *not time-dependent*, residual independence is likely satisfied (no autocorrelation expected)
-# -   **Transformation**: None needed
+#   -   The residuals can be considered independent and not correlated
+
 # 
 # 4.  **Normality**: *From the Q-Q Plot*:
 #   
-#   -   The bulk of the residuals (in the central region) are approximately Gaussian distributed. A noticeable deviations (or outliers) at the upper tail indicates right skewness hence departure from normality. The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
-# -   **Transformation**: Log-transform on dist to correct right-skewness (improve normality and heteroskedasticity)
+#   -   The bulk of the residuals (in the central region) lie on the line and thereby follow the Gaussian distribution.
+# There are slight deviations (or outliers) at the lower and upper tail which indicate right skewness.
+# The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
+# Despite this, the approximation to normality in the center may be sufficient to validate this model.
 # 
 # #### **Model Evaluation and Improvements**
 # 
