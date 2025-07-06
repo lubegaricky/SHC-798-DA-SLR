@@ -94,13 +94,9 @@ cat("\n=== Trend Analysis ===\n")
 This analysis clearly demonstrates that engine size (cylinder count) is a major predictor of fuel efficiency, with smaller engines being visibly more fuel-efficient than larger ones. Some *outliers* exist (may be due to high-efficiency hybrids or low-efficiency compact cars).
 
 -   **Inverse relationship:** Based on the boxplots (where more cylinders = lower mpg), there's a clear *negative* correlation between the number of cylinders and fuel efficiency (mpg). As cylinder count increases, both city and highway mpg decrease.
-
 -   **Highway vs City efficiency:** Highway mpg is consistently higher than city mpg across all cylinder counts (as seen from the combined plot), which may be explained by the more efficient cruising speeds on highways. Generally, the **fuel efficiency difference** between city and highway driving becomes more pronounced in vehicles with fewer cylinders.
-
 -   **4-cylinder cars** are the most fuel-efficient, with median values of 21 mpg (for city) and 29 mpg (for highway). The rest in each category have lower values. **8-cylinder cars** are the least fuel-efficient, with median values of 13 mpg ( for city) and 17 mpg (for highway).
-
 -   **5-cylinder cars** are the least common (narrower range) in both categories. This may be due to fewer models of these cars. **6-cylinder cars** have the most broad range compared to the others
-
 -   There is also **variability within cylinder** groups, and is most pronounced in **6-cylinder cars**, whch suggests that factors beyond cylinder count (including vehicle weight, engine technology, etc.) also influence fuel efficiency.
 
 ```{r, Part-1-c}
@@ -207,7 +203,6 @@ The regression model, **lm_model** predicts highway fuel economy (hwy, in mpg) a
 -   **Regression Coefficients**:
 
     -   **Intercept** (35.6977) implies that when engine displacement is theoretically 0 litres, the predicted highway fuel economy is approximately 35.7 mpg. It's p-value (\< 2e-16) is very small and indicates that it is statistically significant.
-
     -   **Slope** (-3.5306): For each 1-litre increase in engine displacement, highway fuel economy decreases by approximately 3.53 mpg, on average. The t-value (-15.07) and p-value (\< 2e-16) indicate this coefficient is highly significant, confirming a strong negative relationship.
 
 -   **Statistical Significance**:
@@ -218,10 +213,9 @@ The p-value for displ is very small (\< 2.2e-16), meaning the relationship is st
 
     -   The **multiple R-squared** (0.5868) and **adjusted R-squared** (0.585) indicate that approximately 58.68% of the variability in highway fuel economy is explained by engine displacement. This suggests a moderately strong negative relationship, but other factors (e.g., vehicle weight, transmission type) may also play a role.
 
-#### **Implication of Model Outputs**
+#### **Implication of Model Outputs on the Relationship**
 
 -   The **negative coefficient** for *displ* (-3.5306) supports the belief that cars with smaller engines have better fuel efficiency. As engine size increases, highway fuel economy decreases significantly, with a 1-liter increase in displacement leading to a 3.53 mpg reduction in fuel efficiency, on average. The highly significant **p-values** for both the displ coefficient and the overall model (\< 2e-16) confirm that the negative relationship between engine size and fuel efficiency is *not due to random chance*. This strengthens the conclusion that engine size is a reliable predictor of fuel efficiency.
-
 -   The **R-squared value** (0.5868) indicates that engine size alone doesn't explain all the variability in fuel efficiency, so the remaining 41.32% of variability implies other factors (like, vehicle weight, car transmission type, or car drive type) also influence fuel efficiency.
 
 ## Part 2: Data Smoothing
@@ -383,5 +377,23 @@ cat("\n ===  SLR Model Plot  === \n")
 plot(housing$size, housing$price) +
   abline(lm_p.s, col = "red")
 
-
 ```
+
+#### (a)
+
+**Comment on the model summary**
+
+**Regression Coefficients**:
+
+-   **Intercept** (133667.87): This means that for a theoretical house size of 0 units the predicted house price is 133667.87 units. This is not practically useful but ensures the regression line fits the data best within the observed size range. It is not meaningful to extrapolate to size = 0.
+    -   It's *p-value* (\< 2e-16) is small and statistically significant at the 5% level, but its practical value is limited.
+-   **Slope** (93.01): For every 1 unit increase in house size, the house price increases by about 93.01 units Bigger houses cost higher to buy.
+    -   The *p-value* (0.0381) is smaller than 0.05 (even at a 1% significance level). We reject the null hypothesis at the 5% significance level. This means that house size has a statistically significant effect on house price, and we can be fairly confident (with 95% confidence) that the relationship isn't due to chance. s
+
+**Statistical Significance**:
+
+-   From the F-statistic (4.417), the p-value for size is small (0.03814 \< 0.05), meaning the model is statistically significant at the 5% level.
+
+**Model Goodness of Fit**:
+
+-   The **multiple R-squared** (0.04313) and **adjusted R-squared** (0.03336) indicate that only 4.313% of the variability in house prices is explained by house size. This suggests the model is very weak in explanatory power and that other factors likely have a much bigger influence.

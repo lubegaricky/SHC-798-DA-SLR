@@ -458,12 +458,23 @@ cat("Model Assumption Evaluation \n")
 # The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
 # Despite this, the approximation to normality in the center may be sufficient to validate this model.
 # 
-# #### **Model Evaluation and Improvements**
-# 
-# -   Therefore, this model (lm_s.sd = dist \~ speed) has minor assumption violations (non-linearity, heteroscedasticity, non-normality).
-# 
-# -   Suggested transformations like the log(dist) \~ speed and a quadratic term can be made and the diagnostics re-checked. The best model is the one with the most stable residuals, best-fulfilled assumptions, and highest adjusted R².
+# (c)
+# Check if a log transformation improves the model fit. Are any of the models useful?
+# Log transformation
 
+lm_lg <- lm(log(price) ~ size, data = housing)
+summary(lm_lg)
+cat("\n ===  SLR Model Plot  === \n")
+plot(housing$size, housing$price) +
+  abline(lm_p.s, col = "red")
+
+
+# Log-log transformation
+lg.lg <- lm(log(price) ~ log(size), data = housing)
+summary(lg.lg)
+cat("\n ===  SLR Model Plot  === \n")
+plot(housing$size, housing$price) +
+  abline(lm_p.s, col = "blue")
 
 
 
