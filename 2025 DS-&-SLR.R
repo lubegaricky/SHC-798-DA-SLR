@@ -460,21 +460,25 @@ cat("Model Assumption Evaluation \n")
 # 
 # (c)
 # Check if a log transformation improves the model fit. Are any of the models useful?
-# Log transformation
+# 1. Log transformation
 
 lm_lg <- lm(log(price) ~ size, data = housing)
 summary(lm_lg)
+
 cat("\n ===  SLR Model Plot  === \n")
-plot(housing$size, housing$price) +
-  abline(lm_p.s, col = "red")
+plot(log(price) ~ size, data = housing, main = "Log(Price) vs House Size", pch=20) +
+  # lines(loess.smooth(lm_lg$fitted.values, housing$size),col="red") +
+  abline(lm_lg, col = "red")
+
+# main = "Log(Price) vs housing size", xlab = "size", ylab = "log (price)"
 
 
-# Log-log transformation
-lg.lg <- lm(log(price) ~ log(size), data = housing)
+# 2. Log-log transformation
+lg.lg <- lm(log(price) ~ log(size), data = housing,main = "Log(Price) vs housing size", pch=20)
 summary(lg.lg)
 cat("\n ===  SLR Model Plot  === \n")
-plot(housing$size, housing$price) +
-  abline(lm_p.s, col = "blue")
+plot(log(price) ~ log(size), data = housing, pch=20)
+abline(lg.lg, col = "blue")
 
 
 
