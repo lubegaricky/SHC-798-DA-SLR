@@ -112,6 +112,7 @@ plot(model_housing)
 #Scale-Location: This suggests the variance of residuals may increase with fitted values.
 #Residuals vs Leverage: A few observations (e.g., 64, 74, 44) are moderately influential, but none exceed Cook’s distance threshold.
 
+
 #Question 3 
 par(mfrow = c(1,1))
 time <- 0:9

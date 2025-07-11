@@ -465,20 +465,81 @@ cat("Model Assumption Evaluation \n")
 lm_lg <- lm(log(price) ~ size, data = housing)
 summary(lm_lg)
 
-cat("\n ===  SLR Model Plot  === \n")
+cat("\n ===  Log SLR Model Plot  === \n")
 plot(log(price) ~ size, data = housing, main = "Log(Price) vs House Size", pch=20) +
   # lines(loess.smooth(lm_lg$fitted.values, housing$size),col="red") +
   abline(lm_lg, col = "red")
 
-# main = "Log(Price) vs housing size", xlab = "size", ylab = "log (price)"
+# =========**********============
+# Perform residual diagnostics and comment on model assumptions
+cat("Performing Model Diagnostics \n")
+cat("\n ===  Model Diagnostics Plots  === \n")
+# Diagnostics plots
+par(mfrow = c(2,2))
+plot(lm_lg)
+
+par(mfrow = c(1,1))
+# Tukey-Anscombe Plot
+plot(lm_lg$fitted.values, lm_lg$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lm_lg$fitted.values, lm_lg$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+plot(housing$size, lm_lg$residuals, xlab="predictor (size)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor size") +
+  lines(loess.smooth(housing$size, lm_lg$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lm_lg$residuals) #Quantile-Quantile Plot
+qqline(lm_lg$residuals) # adds the diagonal line
 
 
+
+# =============================================
 # 2. Log-log transformation
-lg.lg <- lm(log(price) ~ log(size), data = housing,main = "Log(Price) vs housing size", pch=20)
+lg.lg <- lm(log(price) ~ log(size), data = housing)
 summary(lg.lg)
-cat("\n ===  SLR Model Plot  === \n")
-plot(log(price) ~ log(size), data = housing, pch=20)
-abline(lg.lg, col = "blue")
+cat("\n ===  Log-log SLR Model Plot  === \n")
+plot(log(price) ~ log(size), data = housing,  main = "Log(Price) vs Log (Size)", pch=20) +
+  abline(lg.lg, col = "blue")
+
+# =========**********============
+# Perform residual diagnostics and comment on model assumptions
+cat("Performing Model Diagnostics \n")
+cat("\n ===  Model Diagnostics Plots  === \n")
+# Diagnostics plots
+par(mfrow = c(2,2))
+plot(lg.lg)
+
+par(mfrow = c(1,1))
+# Tukey-Anscombe Plot
+plot(lg.lg$fitted.values, lg.lg$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lg.lg$fitted.values, lg.lg$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+
+plot(log(housing$size), lg.lg$residuals, xlab="predictor log (size)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor size") +
+  lines(loess.smooth(log(housing$size), lg.lg$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lg.lg$residuals) #Quantile-Quantile Plot
+qqline(lg.lg$residuals) # adds the diagonal line
+
+
+# No major Changes from both log and log-log model
 
 
 
+
+## Part 3: Simple regression
+# Question 3
+
+
+# (a)
+# Plot the relationship between time and bacterial count
