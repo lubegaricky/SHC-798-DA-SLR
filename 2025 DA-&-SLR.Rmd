@@ -190,7 +190,7 @@ qqline(lm_model$residuals) # adds the diagonal line
 
 ```
 
-From **Model diagnostics plots (Tuskey-Anscombe plot)**, the red LOESS line is slightly curved which indicates non-linearity. Nonetheless, the expectation of the residuals can be considered zero. The variance of the errors increases with fitted values and homoskedasticity is violated.
+From the **model diagnostics (Tuskey-Anscombe plot)**, the red LOESS line is slightly curved which indicates non-linearity. Nonetheless, the expectation of the residuals can be considered zero. The variance of the errors increases with fitted values and homoskedasticity is violated.
 
 The **Q-Q plot** indicates that the bulk of the residuals (in the central region) are approximately Gaussian distributed. The data exhibits heavy tails (skewness) and has outliers at the extremes. The noticeable presence of extreme positive residuals suggests a right-skewed distribution (departure from normality), the assumption of Gaussian errors is violated by the model.
 
@@ -329,13 +329,13 @@ qqline(lm_s.sd$residuals) # adds the diagonal line
 
 #### **Model Assumption Evaluation**
 
-1.  **Linearity**: *From the Tukey-Anscombe Plot (Residuals vs. Fitted)*:
+1.  **Linearity** — *From the Tukey-Anscombe Plot (Residuals vs. Fitted)*:
 
 -   By inspection, the residuals generally hover around the zero line which suggests that they likely approximate a mean of zero. There is, however, slight curvature (a kink) in the red LOESS smoother line (deviation from the horizontal) which implies mild (misspecified) non-linearity. This is confirmed by the systematic misprediction in the middle (overpredicting) and the extremes (underpredicting). In this case, there is is a clear violation of the linearity (E[E~*i*~] = 0 ) assumption; a straight line is not the correct fit to the data and the model ought to be improved.
 
 -   **Transformation**: Add a quadratic term (dist = β~0~ + β~1~ . speed + β~2~ . speed^2^ + E~*i*~) to fix this and improve the model (as for this pair, the true relationship is quadratic). This constitutes a multiple linear regression problem.
 
-2.  **Homoskedasticity**: *From the Scale-Location Plot*:
+2.  **Homoskedasticity** — *From the Scale-Location Plot*:
 
 -   The red line is slightly upward-trending, indicating that variance increases with fitted values (minor heteroscedasticity)
 -   The Tukey-Anscombe plot also seems to indicate that the scatter is not constant for the entire range of speed/fitted values (less scatter for lower values and more scatter for higher values). There is an obvious violation of homoskedasticity.
@@ -346,7 +346,7 @@ qqline(lm_s.sd$residuals) # adds the diagonal line
 -   Since the data is *not time-dependent*, residual independence is likely satisfied (no autocorrelation expected)
 -   **Transformation**: None needed
 
-4.  **Normality**: *From the Q-Q Plot*:
+4.  **Normality** — *From the Q-Q Plot*:
 
 -   The bulk of the residuals (in the central region) are approximately Gaussian distributed. A noticeable deviations (or outliers) at the upper tail indicates right skewness hence departure from normality. The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
 -   **Transformation**: Log-transform on dist to correct right-skewness (improve normality and heteroskedasticity)
@@ -355,7 +355,7 @@ qqline(lm_s.sd$residuals) # adds the diagonal line
 
 -   Therefore, this model (lm_s.sd = dist \~ speed) has minor assumption violations (non-linearity, heteroscedasticity, non-normality).
 
--   Suggested transformations like the log(dist) \~ speed and a quadratic term can be made and the diagnostics re-checked. The best model is the one with the most stable residuals, best-fulfilled assumptions, and highest adjusted R².
+-   Suggested transformations like the log(dist) \~ speed and a quadratic term could be made and the diagnostics re-checked. The best model is the one with the most stable residuals, best-fulfilled assumptions, and highest adjusted R².
 
 ## Part 3: Simple regression
 
@@ -369,26 +369,25 @@ summary(housing) # Get an overview of the dataset
 str(housing)
 
 # use regression analysis to explore the relationship between house size and price.
-cat("\n A SLR between house prices and house size \n")
+cat("\n A SLR between house price and house size \n")
 lm_p.s <- lm(price ~ size, data = housing)
 summary(lm_p.s)
 
 cat("\n ===  SLR Model Plot  === \n")
 plot(housing$size, housing$price) +
   abline(lm_p.s, col = "red")
-
 ```
 
 #### (a)
 
-**Comment on the model summary**
+**Comment on the Model Summary**
 
 **Regression Coefficients**:
 
 -   **Intercept** (133667.87): This means that for a theoretical house size of 0 units the predicted house price is 133667.87 units. This is not practically useful but ensures the regression line fits the data best within the observed size range. It is not meaningful to extrapolate to size = 0.
     -   It's *p-value* (\< 2e-16) is small and statistically significant at the 5% level, but its practical value is limited.
 -   **Slope** (93.01): For every 1 unit increase in house size, the house price increases by about 93.01 units Bigger houses cost higher to buy.
-    -   The *p-value* (0.0381) is smaller than 0.05 (even at a 1% significance level). We reject the null hypothesis at the 5% significance level. This means that house size has a statistically significant effect on house price, and we can be fairly confident (with 95% confidence) that the relationship isn't due to chance. s
+    -   The *p-value* (0.0381) is smaller than 0.05 (even at a 1% significance level). We reject the null hypothesis at the 5% significance level. This means that house size has a statistically significant effect on house price, and we can be fairly confident (with 95% confidence) that the relationship isn't due to chance.
 
 **Statistical Significance**:
 
@@ -397,3 +396,54 @@ plot(housing$size, housing$price) +
 **Model Goodness of Fit**:
 
 -   The **multiple R-squared** (0.04313) and **adjusted R-squared** (0.03336) indicate that only 4.313% of the variability in house prices is explained by house size. This suggests the model is very weak in explanatory power and that other factors likely have a much bigger influence.
+
+#### (b)
+
+**Residual Diagnostics**
+
+```{r, Part-3-2-b}
+# Perform residual diagnostics and comment on model assumptions
+cat("Performing Model Diagnostics \n")
+cat("\n ===  Model Diagnostics Plots  === \n")
+# Diagnostics plots
+par(mfrow = c(2,2))
+plot(lm_p.s)
+
+par(mfrow = c(1,1))
+# Tukey-Anscombe Plot
+plot(lm_p.s$fitted.values, lm_p.s$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lm_p.s$fitted.values, lm_p.s$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+plot(housing$size, lm_p.s$residuals, xlab="predictor (size)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor size") +
+  lines(loess.smooth(housing$size, lm_p.s$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lm_p.s$residuals) #Quantile-Quantile Plot
+qqline(lm_p.s$residuals) # adds the diagonal line
+
+# Evaluating Model Assumptions
+cat("Model Assumption Evaluation \n")
+```
+
+**Comments on Model Assumptions**
+
+1.  **Linearity** — *From the Tukey-Anscombe Plot (Residuals vs. Fitted)*:
+
+-   From the plot, the residuals generally hover around the zero line which suggests that the E[E~*i*~] = 0 is approximately met. However, LOESS smoother line has a kink in the middle and largely deviates from the horizontal. The residuals for low and high house size (and respective fitted house price) values are systematically negative and they are positive for medium values. The linearity assumption is violated and a straight line is not the correct fit to the data. The model may be improved by variable transformation.
+
+2.  **Homoskedasticity** — *From the Tukey-Anscombe plot and the Scale-Location Plot*:
+
+-   The Tukey-Anscombe plot indicates a more or less constant scatter for the entire range of house size (& fitted) values. There is no obvious violation of homoskedasticity. The red line in the Scale-Location Plot is fairly horizontal which implies constant variance with fitted values (no heteroscedasticity).
+
+3.  **Independence**
+
+-   The residuals can be considered independent and uncorrelated.
+
+4.  **Normality** — *From the Q-Q Plot*:
+
+-   The bulk of the residuals (in the central region) lie on the 45^o^ line and thereby follow the Gaussian distribution. There are slight deviations (or outliers) at the lower and upper tail which indicate right skewness. The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality. Despite this, the approximation to normality in the center may be sufficient to validate this model.

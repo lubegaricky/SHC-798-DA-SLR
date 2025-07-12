@@ -351,6 +351,7 @@ cat("\n ===  Model Evaluation and Improvements  ==== \n")
 # Suggested transformations like the log(dist) ~ speed and a quadratic term can be made and the diagnostics re-checked.
 # The best model is the one with the most stable residuals, best-fulfilled assumptions, and highest adjusted R².
 
+
 ## Part 3: Simple regression
 # Question 2
 
@@ -383,7 +384,7 @@ view(housing)
 # -------------
 
 # Load the housing.rda data file
-load(file.choose())
+# load(file.choose())
 head(housing) # View first few rows of the dataset
 summary(housing) # Get an overview of the dataset
 str(housing)
@@ -392,7 +393,7 @@ str(housing)
 
 # (a)
 # Fit a simple regression model.
-cat("\n A SLR between house prices and house size \n")
+cat("\n A SLR between house price and house size \n")
 lm_p.s <- lm(price ~ size, data = housing)
 summary(lm_p.s)
 
@@ -458,9 +459,13 @@ cat("Model Assumption Evaluation \n")
 # The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality.
 # Despite this, the approximation to normality in the center may be sufficient to validate this model.
 # 
+
 # (c)
 # Check if a log transformation improves the model fit. Are any of the models useful?
-# 1. Log transformation
+
+# Any right-skewness in the data?
+
+# 1. Logged-Response Model transformation
 
 lm_lg <- lm(log(price) ~ size, data = housing)
 summary(lm_lg)
@@ -532,7 +537,7 @@ qqnorm(lg.lg$residuals) #Quantile-Quantile Plot
 qqline(lg.lg$residuals) # adds the diagonal line
 
 
-# No major Changes from both log and log-log model
+# No major Changes/improvements by both log and log-log model
 
 
 
