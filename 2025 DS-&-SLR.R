@@ -464,8 +464,43 @@ cat("Model Assumption Evaluation \n")
 # Check if a log transformation improves the model fit. Are any of the models useful?
 
 # Any right-skewness in the data?
-See distribution (histogram)
+# View distribution (histogram)
 
+# Viewing House prices
+hist(housing$price, freq = FALSE, breaks = 30, col = "lightblue",
+     main = " Price Histogram with Density Curve", xlab = "Value", ylab = "Density",
+     border = "black")
+
+lines(density(housing$price, na.rm = TRUE), col = "red",lwd = 2) # Add density curve
+
+# Adding a normal distribution curve for comparison
+h_price <- seq(min(housing$price, na.rm = TRUE), max(housing$price, na.rm = TRUE), length.out = 100)
+normal_price <- dnorm(h_price, mean = mean(housing$price, na.rm = TRUE), sd = sd(housing$price, na.rm = TRUE))
+lines(h_price, normal_price, col = "blue", lwd = 2, lty = 2)
+
+# Add legend
+legend("topright", legend = c("Kernel Density", "Normal Distribution"), col = c("red", "blue"),
+       lwd = 2, lty = c(1, 2))
+
+
+# Viewing House Sizes
+hist(housing$size, freq = FALSE, breaks = 30, col = "lightblue",
+     main = " Size Histogram with Density Curve", xlab = "Value", ylab = "Density",
+     border = "black")
+
+lines(density(housing$size, na.rm = TRUE), col = "red",lwd = 2) # Add density curve
+
+# Adding a normal distribution curve for comparison
+h_size <- seq(min(housing$size, na.rm = TRUE), max(housing$size, na.rm = TRUE), length.out = 100)
+normal_size <- dnorm(h_size, mean = mean(housing$size, na.rm = TRUE), sd = sd(housing$size, na.rm = TRUE))
+lines(h_size, normal_size, col = "blue", lwd = 2, lty = 2)
+
+# Add legend
+legend("topright", legend = c("Kernel Density", "Normal Distribution"), col = c("red", "blue"),
+       lwd = 2, lty = c(1, 2))
+
+
+# __________________________--------_______________________
 # 1. Logged-Response Model transformation
 
 lm_lg <- lm(log(price) ~ size, data = housing)
