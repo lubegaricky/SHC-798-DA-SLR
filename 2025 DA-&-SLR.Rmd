@@ -384,7 +384,7 @@ plot(housing$size, housing$price) +
 
 **Regression Coefficients**:
 
--   **Intercept** (133667.87): This means that for a theoretical house size of 0 units the predicted house price is 133667.87 units. This is not practically useful but ensures the regression line fits the data best within the observed size range. It is not meaningful to extrapolate to size = 0.
+-   **Intercept** (133667.87): This means that for a theoretical house size of 0 units the predicted house price is 133667.87 units. This is not practically useful but ensures the regression line fits the data best within the observed size range. It is not meaningful to extrapolate to house size = 0.
     -   It's *p-value* (\< 2e-16) is small and statistically significant at the 5% level, but its practical value is limited.
 -   **Slope** (93.01): For every 1 unit increase in house size, the house price increases by about 93.01 units Bigger houses cost higher to buy.
     -   The *p-value* (0.0381) is smaller than 0.05 (even at a 1% significance level). We reject the null hypothesis at the 5% significance level. This means that house size has a statistically significant effect on house price, and we can be fairly confident (with 95% confidence) that the relationship isn't due to chance.
@@ -448,12 +448,11 @@ cat("Model Assumption Evaluation \n")
 
 -   The bulk of the residuals (in the central region) lie on the 45^o^ line and thereby follow the Gaussian distribution. There are slight deviations (or outliers) at the lower and upper tail which indicate right skewness. The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality. Despite this, the approximation to normality in the center may be sufficient to validate this model.
 
-
 #### (c)
 
 **Check if a log transformation improves the model fit. Are any of the models useful?**
 
-```{r, Part-3-2-c}
+```{r, Part-3-2-c-1}
 # Any right-skewness in the data?
 # View distribution (histogram)
 cat("\n Viewing Paramter Distributions: Check for skewness\n")
@@ -494,3 +493,36 @@ legend("topright", legend = c("Kernel Density", "Normal Distribution"), col = c(
 
 ```
 
+From the **plots**, the house **price** data is only *slightly right-skewed* (in agreement with the Q-Q plot) while the house **size** data is **clearly right-skewed**. A log-log transform is appropriate for the pair (which are right-skewed variables taking on only positive values).
+
+```{r, Part-3-2-c-2}
+# 1. Log-log Transformation
+lg.lg <- lm(log(price) ~ log(size), data = housing)
+summary(lg.lg)
+
+cat("\n ===  Log-log SLR Model Plot  === \n")
+plot(log(price) ~ log(size), data = housing,  main = "Log(Price) vs Log (Size)", pch=20) +
+  abline(lg.lg, col = "blue")
+
+# 2. Logged-Response Model Transformation
+lm_lg <- lm(log(price) ~ size, data = housing)
+summary(lm_lg)
+
+cat("\n ===  Log SLR Model Plot  === \n")
+plot(log(price) ~ size, data = housing, main = "Log(Price) vs House Size", pch=20) +
+  # lines(loess.smooth(lm_lg$fitted.values, housing$size),col="red") +
+  abline(lm_lg, col = "red")
+
+cat("\n Evaluating Model Fit Improvements \n")
+
+```
+
+**Model Fit of the Log-log Model**:
+
+-   The **multiple R-squared** (0.06088) and **adjusted R-squared** (0.05129) of the log-log model indicate that only 6.088% of the variability in house prices is explained by house size. This model is also very weak in explanatory power.
+
+**Model Fit of the Logged Response Model**:
+
+-   The **multiple R-squared** (0.05051) and **adjusted R-squared** (0.04082) of the logged response model indicate that only 5.051% of the variability in house prices is explained by house size. This is also very weak model.
+
+**Are any of the models useful?** The residual diagnostics of all three models indicate no assumption violation. But all 3 models have very low model fits (explanatory power), i.e; 0.04313 (on the original scale), 0.06088 (for the log-log model), 0.05051 (for the logged response model), and thus **neither of them is useful**.

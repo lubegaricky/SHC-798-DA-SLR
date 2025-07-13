@@ -584,3 +584,6 @@ qqline(lg.lg$residuals) # adds the diagonal line
 
 # (a)
 # Plot the relationship between time and bacterial count
+time <- 0:9
+count <- c(500, 400, 320, 250, 190, 150, 120, 90, 70, 50)
+decay <- data.frame(time, count)
