@@ -639,36 +639,40 @@ confint(exp_decay, "time")
 ## Part 3: Simple regression
 # Question 4
 
+# Validating the Hand Calculations 
+
 par(mfrow = c(2,2))
 age <- c(5, 10, 15, 20, 25, 30)
 strength <- c(48, 42, 37, 30, 27, 21)
-alien <- data.frame(age, strength)
+a_beams <- data.frame(age, strength)
 
 #(a)
-hist(alien$age, main = "Histogram of Age", xlab = "Age (years)", col = "lightblue")
-hist(alien$strength, main = "Histogram of Strength", xlab = "Strength (MPa)", col = "lightgreen")
+hist(a_beams$age, main = "Histogram of Age", xlab = "Age (years)", col = "lightblue")
+hist(a_beams$strength, main = "Histogram of Strength", xlab = "Strength (MPa)", col = "lightgreen")
 
 #(b)
-alien$log_age <- log(alien$age)
-alien$log_strength <- log(alien$strength)
-hist(alien$log_age, main = "Histogram of log(Age)", xlab = "log(Age)", col = "skyblue")
-hist(alien$log_strength, main = "Histogram of log(Strength)", xlab = "log(Strength)", col = "lightpink")
+a_beams$l_age <- log(a_beams$age)
+a_beams$l_strength <- log(a_beams$strength)
+hist(a_beams$l_age, main = "Histogram of log(Age)", xlab = "log(Age)", col = "skyblue")
+hist(a_beams$l_strength, main = "Histogram of log(Strength)", xlab = "log(Strength)", col = "lightpink")
+par(mfrow = c(1,1))
 
 #(c)
-log_model <- lm(log_strength ~ log_age, data = alien)
-summary(log_model)
+log_beam <- lm(l_strength ~ l_age, data = a_beams)
+summary(log_beam)
 
 #(d)
-summary(log_model)$r.squared
+summary(log_beam)$r.squared
 
 #(e)
-summary(log_model)$coefficients["log_age", "Pr(>|t|)"]
+summary(log_beam)$coefficients["l_age", "Pr(>|t|)"]
 
 #(f)
-residuals <- resid(log_model)
-fitted_vals <- fitted(log_model)
+residuals <- resid(log_beam)
+fitted_vals <- fitted(log_beam)
 
-plot(fitted_vals, residuals, pch = 19, col = "purple",
+plot(fitted_vals, residuals, pch = 19, col = "blue",
      main = "Residuals vs Fitted Values",
      xlab = "Fitted log(Strength)", ylab = "Residuals")
 abline(h = 0, col = "red")
+
