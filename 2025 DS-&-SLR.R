@@ -587,3 +587,88 @@ qqline(lg.lg$residuals) # adds the diagonal line
 time <- 0:9
 count <- c(500, 400, 320, 250, 190, 150, 120, 90, 70, 50)
 decay <- data.frame(time, count)
+
+plot(decay$count, decay$time, type = "b", main = "Bacterial Counts at Different Times", pch=20, xlab = "Time (hours)", ylab = "Bacterial Count")
+
+# (b)
+# Fit an exponential decay model and determine if this function better explains the data than a simple linear model.
+
+# Simple Linear Model
+lm_decay <- lm(count ~ time, data = decay)
+summary(lm_decay)
+
+# Exponential Model (obtained from a logged response model)
+# From general decay models, C(t) = C~0~.e^−kt^, where C implies bacterial count and t, time (hours), 
+# We linearise to log[C(t)] = log[C~0~] − k.t
+# which is generally; log(count) = β~0~ + β~1~ . time + E~*i*~
+
+exp_decay <- lm(log(count) ~ time, data = decay)
+summary(exp_decay)
+
+
+plot(time, count, pch = 19, col = "black",
+     xlab = "Time (hours)", ylab = "Bacterial Count",
+     main = "Decay Model: Linear vs Exponential Fit")
+abline(lm_decay, col = "red", lwd = 2)
+# abline(exp_decay, col = "red", lwd = 2)
+
+lines(time, exp(predict(exp_decay)), col = "blue", lwd = 2, lty = 2)
+legend("topright", legend = c("Linear Fit", "Exponential Fit"),
+       col = c("red", "blue"), lwd = 2, lty = c(1, 2))
+
+#The exponential model fits better because it does have a slightly higher R-Squared value.
+
+# (c)
+# Predict the bacterial count at time = 10 hours
+pred_c1 <- predict(exp_decay, newdata = data.frame(time = 10), interval = "confidence")
+pred_c <- predict(exp_decay, newdata = data.frame(time = 10))
+pred_c1
+pred_c
+pred_10_1 <- exp(pred_c1)
+pred_10_1
+pred_10 <- exp(pred_c)
+pred_10
+cat("the bacterial count at time = 10 hours is:", pred_10, "\n")
+
+# (d)
+# Compute a 95% confidence interval for the estimated decay rate
+confint(exp_decay)
+confint(exp_decay, "time")
+
+
+## Part 3: Simple regression
+# Question 4
+
+par(mfrow = c(2,2))
+age <- c(5, 10, 15, 20, 25, 30)
+strength <- c(48, 42, 37, 30, 27, 21)
+alien <- data.frame(age, strength)
+
+#(a)
+hist(alien$age, main = "Histogram of Age", xlab = "Age (years)", col = "lightblue")
+hist(alien$strength, main = "Histogram of Strength", xlab = "Strength (MPa)", col = "lightgreen")
+
+#(b)
+alien$log_age <- log(alien$age)
+alien$log_strength <- log(alien$strength)
+hist(alien$log_age, main = "Histogram of log(Age)", xlab = "log(Age)", col = "skyblue")
+hist(alien$log_strength, main = "Histogram of log(Strength)", xlab = "log(Strength)", col = "lightpink")
+
+#(c)
+log_model <- lm(log_strength ~ log_age, data = alien)
+summary(log_model)
+
+#(d)
+summary(log_model)$r.squared
+
+#(e)
+summary(log_model)$coefficients["log_age", "Pr(>|t|)"]
+
+#(f)
+residuals <- resid(log_model)
+fitted_vals <- fitted(log_model)
+
+plot(fitted_vals, residuals, pch = 19, col = "purple",
+     main = "Residuals vs Fitted Values",
+     xlab = "Fitted log(Strength)", ylab = "Residuals")
+abline(h = 0, col = "red")
