@@ -464,6 +464,7 @@ cat("Model Assumption Evaluation \n")
 # Check if a log transformation improves the model fit. Are any of the models useful?
 
 # Any right-skewness in the data?
+See distribution (histogram)
 
 # 1. Logged-Response Model transformation
 
