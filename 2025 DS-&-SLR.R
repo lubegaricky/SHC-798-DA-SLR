@@ -641,38 +641,46 @@ confint(exp_decay, "time")
 
 # Validating the Hand Calculations 
 
-par(mfrow = c(2,2))
+
 age <- c(5, 10, 15, 20, 25, 30)
 strength <- c(48, 42, 37, 30, 27, 21)
 a_beams <- data.frame(age, strength)
 
 #(a)
-hist(a_beams$age, main = "Histogram of Age", xlab = "Age (years)", col = "lightblue")
-hist(a_beams$strength, main = "Histogram of Strength", xlab = "Strength (MPa)", col = "lightgreen")
+par(mfrow = c(2,2))
+hist(a_beams$age, main = "Histogram for Age", xlab = "Age (years)", col = "lightblue")
+hist(a_beams$strength, main = "Histogram for Strength", xlab = "Strength (MPa)", col = "lightgreen")
 
 #(b)
-a_beams$l_age <- log(a_beams$age)
-a_beams$l_strength <- log(a_beams$strength)
-hist(a_beams$l_age, main = "Histogram of log(Age)", xlab = "log(Age)", col = "skyblue")
-hist(a_beams$l_strength, main = "Histogram of log(Strength)", xlab = "log(Strength)", col = "lightpink")
+a.age <- log(a_beams$age)
+a.strength <- log(a_beams$strength)
+hist(a.age, main = "Histogram for log(Age)", xlab = "log(Age)", col = "skyblue")
+hist(a.strength, main = "Histogram for log(Strength)", xlab = "log(Strength)", col = "lightpink")
 par(mfrow = c(1,1))
 
 #(c)
-log_beam <- lm(l_strength ~ l_age, data = a_beams)
+log_beam <- lm(log(strength) ~ log(age), data = a_beams)
 summary(log_beam)
 
 #(d)
 summary(log_beam)$r.squared
 
 #(e)
-summary(log_beam)$coefficients["l_age", "Pr(>|t|)"]
+summary(log_beam)$coefficients["log(age)", "Pr(>|t|)"]
 
 #(f)
 residuals <- resid(log_beam)
-fitted_vals <- fitted(log_beam)
+fitted <- fitted(log_beam)
 
-plot(fitted_vals, residuals, pch = 19, col = "blue",
+plot(fitted, residuals, pch = 19, col = "blue",
      main = "Residuals vs Fitted Values",
      xlab = "Fitted log(Strength)", ylab = "Residuals")
 abline(h = 0, col = "red")
+
+######################################
+# Tukey-Anscombe Plot
+plot(log_beam$fitted.values, log_beam$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(log_beam$fitted.values, log_beam$residuals),col="red") +
+  abline(h=0, col="grey")
 
