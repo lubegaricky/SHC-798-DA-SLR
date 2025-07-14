@@ -244,9 +244,10 @@ plot(hour, vehicles, type = "p", main = "Running Mean (Manual)", xlab = "Hour", 
 lines(hours_smooth, running_mean, type = "l", col = "blue")
 
 #(b)
-ks <- ksmooth(hour, vehicles, kernel = "box", bandwidth = 1)
+ks <- ksmooth(hour, vehicles, kernel = "box", bandwidth = 3)
 plot(hour, vehicles, main = "ksmooth (Box kernel)", xlab = "Hour", ylab = "Vehicles")
 lines(ks, col = "blue")
+# ?ksmooth
 
 #(c)
 ks_gauss <- ksmooth(hour, vehicles, kernel = "normal", bandwidth = 2)
