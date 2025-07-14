@@ -1,0 +1,93 @@
+---
+title: "SHC 798 Assignment 1, 2025"
+author: "Richard Lubega"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# SHC 798 Assignment 1, 2025
+
+## Part 3: Simple regression
+
+### Question 3
+
+##### (a)
+
+```{r, Part-3-3-a}
+time <- 0:9
+count <- c(500, 400, 320, 250, 190, 150, 120, 90, 70, 50)
+decay <- data.frame(time, count)
+
+plot(decay$count, decay$time, type = "b", main = "Bacterial Counts at Different Times", pch=20, xlab = "Time (hours)", ylab = "Bacterial Count")
+
+```
+
+#### (b)
+
+**Fit an exponential decay model and determine if this function better explains the data than a simple linear model**.
+
+1.  **Simple Linear Model**
+
+```{r, Part-3-3-b-1}
+# Simple Linear Model
+lm_decay <- lm(count ~ time, data = decay)
+summary(lm_decay)
+```
+
+2.  **Exponential Model**
+
+-   The exponential Model is obtained from a logged response model.
+-   From general decay models, C(t) = C~0~ . e^−k . t^, where C implies bacterial count and t, time (hours).
+-   We linearise to log[C(t)] = log[C~0~] − k . t, which is generally written as
+    -   log(count) = β~0~ + β~1~ . time + E~*i*~ ............. a logged response model
+
+```{r, Part-3-3-b-2}
+exp_decay <- lm(log(count) ~ time, data = decay)
+summary(exp_decay)
+```
+
+**Visualising the models**
+
+```{r, Part-3-3-b-3}
+plot(time, count, pch = 19, col = "black",
+     xlab = "Time (hours)", ylab = "Bacterial Count",
+     main = "Decay Model: Linear vs Exponential Fit")
+abline(lm_decay, col = "red", lwd = 2)
+# abline(exp_decay, col = "red", lwd = 2)
+
+lines(time, exp(predict(exp_decay)), col = "blue", lwd = 2, lty = 2)
+legend("topright", legend = c("Linear Fit", "Exponential Fit"),
+       col = c("red", "blue"), lwd = 2, lty = c(1, 2))
+```
+
+**Comparing Explanatory Power**:
+
+The exponential model *fits* (explains) the data **better** because it does have a higher R-Squared value (0.998) compared to the simple linear model (with 0.9299).
+
+#### (c)
+
+**Predict the bacterial count at time = 10 hours**
+
+```{r, Part-3-3-c}
+pred_c <- predict(exp_decay, newdata = data.frame(time = 10))
+pred_10 <- exp(pred_c)
+cat("the bacterial count at time = 10 hours is:", pred_10, "\n")
+```
+
+#### (d)
+
+**Compute a 95% confidence interval for the estimated decay rate**
+
+```{r, Part-3-3-d}
+# The decay rate is the slope
+cat("the 95% confidence interval for the estimated decay rate is: \n")
+confint(exp_decay, "time")
+```
+

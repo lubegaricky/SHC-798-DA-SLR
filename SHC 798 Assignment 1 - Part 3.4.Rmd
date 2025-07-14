@@ -1,0 +1,76 @@
+---
+title: "SHC 798 Assignment 1, 2025"
+author: "Richard Lubega"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# SHC 798 Assignment 1, 2025
+
+## Part 3: Simple regression
+
+### Question 4
+
+**Validating the Hand Calculations**
+
+```{r, Part-3-4}
+age <- c(5, 10, 15, 20, 25, 30)
+strength <- c(48, 42, 37, 30, 27, 21)
+a_beams <- data.frame(age, strength)
+```
+
+##### (a) and (b)
+
+```{r, Part-3-4-a-b}
+par(mfrow = c(2,2))
+hist(a_beams$age, main = "Histogram for Age", xlab = "Age (years)",
+     col = "lightblue")
+hist(a_beams$strength, main = "Histogram for Strength", xlab = "Strength (MPa)",
+     col = "lightgreen")
+
+#Applying natural logarithms
+a.age <- log(a_beams$age)
+a.strength <- log(a_beams$strength)
+hist(a.age, main = "Histogram for log(Age)", xlab = "log(Age)",
+     col = "skyblue")
+hist(a.strength, main = "Histogram for log(Strength)", xlab = "log(Strength)",
+     col = "lightpink")
+par(mfrow = c(1,1))
+
+```
+
+#### (c)
+
+```{r, Part-3-4-c}
+log_beam <- lm(log(strength) ~ log(age), data = a_beams)
+summary(log_beam)
+```
+
+#### (d)
+
+```{r, Part-3-4-d}
+summary(log_beam)$r.squared
+```
+
+#### (e)
+
+```{r, Part-3-4-e}
+summary(log_beam)$coefficients["log(age)", "Pr(>|t|)"]
+```
+
+####(f)
+
+```{r,Part-3-4-f}
+# Tukey-Anscombe Plot
+plot(log_beam$fitted.values, log_beam$residuals, xlab="Fitted", ylab="Residuals", pch = 19, col = "blue") +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(log_beam$fitted.values, log_beam$residuals),col="red") +
+  abline(h=0, col="grey")
+```

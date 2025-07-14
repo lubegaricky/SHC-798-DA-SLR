@@ -1,0 +1,200 @@
+---
+title: "SHC 798 Assignment 1, 2025"
+author: "Richard Lubega"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# SHC 798 Assignment 1, 2025
+
+## Part 3: Simple regression
+
+### Question 2
+
+```{r, Part-3-2}
+# Load the housing.rda data file
+load(file.choose())
+head(housing) # View first few rows of the dataset
+summary(housing) # Get an overview of the dataset
+str(housing)
+
+# use regression analysis to explore the relationship between house size and price.
+cat("A SLR between house price and house size \n")
+lm_p.s <- lm(price ~ size, data = housing)
+summary(lm_p.s)
+
+cat("===  SLR Model Plot  === \n")
+plot(housing$size, housing$price) +
+  abline(lm_p.s, col = "red")
+```
+
+#### (a)
+
+**Comment on the Model Summary**
+
+**Regression Coefficients**:
+
+-   **Intercept** (133667.87): This means that for a theoretical house size of 0 units the predicted house price is 133667.87 units. This is not practically useful but ensures the regression line fits the data best within the observed size range. It is not meaningful to extrapolate to house size = 0.
+    -   It's *p-value* (\< 2e-16) is small and statistically significant at the 5% level, but its practical value is limited.
+-   **Slope** (93.01): For every 1 unit increase in house size, the house price increases by about 93.01 units Bigger houses cost higher to buy.
+    -   The *p-value* (0.0381) is smaller than 0.05 (even at a 1% significance level). We reject the null hypothesis at the 5% significance level. This means that house size has a statistically significant effect on house price, and we can be fairly confident (with 95% confidence) that the relationship isn't due to chance.
+
+**Statistical Significance**:
+
+-   From the F-statistic (4.417), the p-value for size is small (0.03814 \< 0.05), meaning the model is statistically significant at the 5% level.
+
+**Model Goodness of Fit**:
+
+-   The **multiple R-squared** (0.04313) and **adjusted R-squared** (0.03336) indicate that only 4.313% of the variability in house prices is explained by house size. This suggests the model is very weak in explanatory power and that other factors likely have a much bigger influence.
+
+#### (b)
+
+**Residual Diagnostics**
+
+```{r, Part-3-2-b}
+# Perform residual diagnostics and comment on model assumptions
+cat("Performing Model Diagnostics \n")
+cat(" ===  Model Diagnostics Plots  === \n")
+# Diagnostics plots
+par(mfrow = c(2,2))
+plot(lm_p.s)
+
+par(mfrow = c(1,1))
+# Tukey-Anscombe Plot
+plot(lm_p.s$fitted.values, lm_p.s$residuals, xlab="Fitted", ylab="Residuals", pch=20) +
+  title("Residuals vs. Fitted Values") +
+  lines(loess.smooth(lm_p.s$fitted.values, lm_p.s$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Residuals vs. Predictor Plot
+plot(housing$size, lm_p.s$residuals, xlab="predictor (size)", ylab="Residuals", pch=20) +
+  title("Residuals vs. Predictor size") +
+  lines(loess.smooth(housing$size, lm_p.s$residuals),col="red") +
+  abline(h=0, col="grey")
+
+# Quantile-Quantile Plot
+qqnorm(lm_p.s$residuals) #Quantile-Quantile Plot
+qqline(lm_p.s$residuals) # adds the diagonal line
+
+# Evaluating Model Assumptions
+cat("Model Assumption Evaluation \n")
+```
+
+**Comments on Model Assumptions**
+
+1.  **Linearity** — *From the Tukey-Anscombe Plot (Residuals vs. Fitted)*:
+
+-   From the plot, the residuals generally hover around the zero line which suggests that the E[E~*i*~] = 0 is approximately met. However, LOESS smoother line has a kink in the middle and largely deviates from the horizontal. The residuals for low and high house size (and respective fitted house price) values are systematically negative and they are positive for medium values. The linearity assumption is violated and a straight line is not the correct fit to the data. The model may be improved by variable transformation.
+
+2.  **Homoskedasticity** — *From the Tukey-Anscombe plot and the Scale-Location Plot*:
+
+-   The Tukey-Anscombe plot indicates a more or less constant scatter for the entire range of house size (& fitted) values. There is no obvious violation of homoskedasticity. The red line in the Scale-Location Plot is fairly horizontal which implies constant variance with fitted values (no heteroscedasticity).
+
+3.  **Independence**
+
+-   The residuals can be considered independent and uncorrelated.
+
+4.  **Normality** — *From the Q-Q Plot*:
+
+-   The bulk of the residuals (in the central region) lie on the 45^o^ line and thereby follow the Gaussian distribution. There are slight deviations (or outliers) at the lower and upper tail which indicate right skewness. The assumption of Gaussian errors is slightly violated by the model due to this moderate non-normality. Despite this, the approximation to normality in the center may be sufficient to validate this model.
+
+#### (c)
+
+**Check if a log transformation improves the model fit. Are any of the models useful?**
+
+```{r, Part-3-2-c-1}
+# Any right-skewness in the data?
+# View distribution (histogram)
+cat(" Viewing Paramter Distributions: Check for skewness\n")
+# Viewing House prices
+hist(housing$price, freq = FALSE, breaks = 30, col = "lightblue",
+     main = " Price Histogram with Density Curve", xlab = "Value", ylab = "Density",
+     border = "black")
+
+lines(density(housing$price, na.rm = TRUE), col = "red",lwd = 2) # Add density curve
+
+
+
+# Adding a normal distribution curve for comparison
+h_price <- seq(min(housing$price, na.rm = TRUE), max(housing$price, na.rm = TRUE), length.out = 100)
+normal_price <- dnorm(h_price, mean = mean(housing$price, na.rm = TRUE), sd = sd(housing$price, na.rm = TRUE))
+lines(h_price, normal_price, col = "blue", lwd = 2, lty = 2)
+
+# Add legend
+legend("topright", legend = c("Kernel Density", "Normal Distribution"), col = c("red", "blue"),
+       lwd = 2, lty = c(1, 2))
+
+
+# Viewing House Sizes
+hist(housing$size, freq = FALSE, breaks = 30, col = "lightblue",
+     main = " Size Histogram with Density Curve", xlab = "Value", ylab = "Density",
+     border = "black")
+
+lines(density(housing$size, na.rm = TRUE), col = "red",lwd = 2) # Add density curve
+
+# Adding a normal distribution curve for comparison
+h_size <- seq(min(housing$size, na.rm = TRUE), max(housing$size, na.rm = TRUE), length.out = 100)
+normal_size <- dnorm(h_size, mean = mean(housing$size, na.rm = TRUE), sd = sd(housing$size, na.rm = TRUE))
+lines(h_size, normal_size, col = "blue", lwd = 2, lty = 2)
+
+# Add legend
+legend("topright", legend = c("Kernel Density", "Normal Distribution"), col = c("red", "blue"),
+       lwd = 2, lty = c(1, 2))
+
+```
+
+From the **plots**, the house **price** data is only *slightly right-skewed* (in agreement with the Q-Q plot) while the house **size** data is **clearly right-skewed**. A log-log transform is appropriate for the pair (which are right-skewed variables taking on only positive values).
+
+```{r, Part-3-2-c-2}
+# 1. Log-log Transformation
+lg.lg <- lm(log(price) ~ log(size), data = housing)
+summary(lg.lg)
+
+cat("===  Log-log SLR Model Plot  === \n")
+plot(log(price) ~ log(size), data = housing,  main = "Log(Price) vs Log (Size)", pch=20) +
+  abline(lg.lg, col = "blue")
+
+# 2. Logged-Response Model Transformation
+lm_lg <- lm(log(price) ~ size, data = housing)
+summary(lm_lg)
+
+cat("===  Log SLR Model Plot  === \n")
+plot(log(price) ~ size, data = housing, main = "Log(Price) vs House Size", pch=20) +
+  # lines(loess.smooth(lm_lg$fitted.values, housing$size),col="red") +
+  abline(lm_lg, col = "red")
+
+# 3.Transforming the Predictor
+lm_lgh <- lm(price ~ log(size), data = housing)
+summary(lm_lgh)
+
+cat("===  Log SLR Model Plot  === \n")
+plot(price ~ log(size), data = housing, main = "Price vs Log(House Size)", pch=20) +
+  # lines(loess.smooth(lm_lg$fitted.values, housing$size),col="red") +
+  abline(lm_lgh, col = "red")
+
+cat("Evaluating Model Fit Improvements \n")
+
+```
+
+**Model Fit of the Log-log Model**:
+
+-   The **multiple R-squared** (0.06088) and **adjusted R-squared** (0.05129) of the log-log model indicate that only 6.088% of the variability in house prices is explained by house size. This model is also very weak in explanatory power.
+
+**Model Fit of the Logged Response Model**:
+
+-   The **multiple R-squared** (0.05051) and **adjusted R-squared** (0.04082) of the logged response model indicate that only 5.051% of the variability in house prices is explained by house size. This is also very weak model.
+
+**Model Fit of the Logged Predictor Model**:
+
+-   The **multiple R-squared** (0.05194) and **adjusted R-squared** (0.04226) of this model suggest that only 5.194% of the variability in house prices can be explained by house size.
+
+**Are any of the models useful?**
+
+The residual diagnostics of all four models indicate no assumption violation. But all of them have very low model fits (explanatory power), i.e; 0.04313 (on the original scale), 0.06088 (for the log-log model), 0.05051 (for the logged response model) and 0.05194 (logged predictor model) , and thus **neither of them is useful**.
