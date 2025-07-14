@@ -236,20 +236,133 @@ qqline(lm_model$residuals) # adds the diagonal line
 hour <- 6:18
 vehicles <- c(200, 350, 500, 420, 380, 300, 250, 220, 200, 280, 400, 550, 600)
 traffic <- data.frame(hour, vehicles)
+# 
+# #(a)
+# running_mean <- sapply(2:(length(vehicles)-1), function(i) mean(vehicles[(i-1):(i+1)]))
+# hours_smooth <- hour[2:(length(hour)-1)]
+# plot(hour, vehicles, type = "p", main = "Running Mean (Manual)", xlab = "Hour", ylab = "Vehicles")
+# lines(hours_smooth, running_mean, type = "l", col = "blue")
 
-#(a)
-running_mean <- sapply(2:(length(vehicles)-1), function(i) mean(vehicles[(i-1):(i+1)]))
-hours_smooth <- hour[2:(length(hour)-1)]
-plot(hour, vehicles, type = "p", main = "Running Mean (Manual)", xlab = "Hour", ylab = "Vehicles")
-lines(hours_smooth, running_mean, type = "l", col = "blue")
+# my (a)
+# Validating in R
 
-#(b)
-ks <- ksmooth(hour, vehicles, kernel = "box", bandwidth = 3)
-plot(hour, vehicles, main = "ksmooth (Box kernel)", xlab = "Hour", ylab = "Vehicles")
-lines(ks, col = "blue")
-# ?ksmooth
+# Create the data frame
+hour <- 6:18
+vehicles <- c(200, 350, 500, 420, 380, 300, 250, 220, 200, 280, 400, 550, 600)
+traffic <- data.frame(hour, vehicles)
 
-#(c)
+# Compute running mean using window width of 3
+traffic$smoothed <- stats::filter(traffic$vehicles, rep(1/3, 3), sides = 2)
+print(traffic)
+
+# Scatter Plot
+plot(hour, vehicles, type = "p", main = "Running Mean Smoother", xlab = "Hour", ylab = "Vehicles")
+lines(traffic$hour, traffic$smoothed, type = "l", col = "red")
+
+
+# My (b)
+# Compute running mean smoother using ksmooth
+smoothed <- ksmooth(traffic$hour, traffic$vehicles, kernel = "box", bandwidth = 1.5)
+
+# Create a data frame with smoothed values
+traffic_smoothed <- data.frame(hour = smoothed$x, vehicles_smoothed = smoothed$y)
+
+# Plot scatter plot of original data and overlay the smoothed line
+plot(traffic$hour, traffic$vehicles, 
+     xlab = "Hour", ylab = "Vehicles", 
+     main = "Traffic Data with Running Mean Smoother (3-Hour Window)",
+     pch = 16, col = "black")  # Scatter plot
+lines(traffic_smoothed$hour, traffic_smoothed$vehicles_smoothed, 
+      col = "red", lwd = 2)  # Smoothed line
+
+
+# #(b)
+# ks <- ksmooth(hour, vehicles, kernel = "box", bandwidth = 1.5)
+# plot(hour, vehicles, main = "ksmooth (Box kernel)", xlab = "Hour", ylab = "Vehicles")
+# lines(ks, col = "blue")
+# # ?ksmooth
+
+
+# My (c) Validating in R
+
+# Checking the Gaussian kernel smoother (does not have the normalization constant)
+gaussian_kernel <- function(xi, x, y, h) {
+  weights <- exp(-((x - xi)^2) / (2 * h^2))
+  sum(weights * y) / sum(weights)}
+
+# Compute values
+xi_values <- 6:18
+kernel_values <- sapply(xi_values, function(xi) gaussian_manual(xi, hour, vehicles, h = 2))
+
+# # Validating with h = 2
+validation <- data.frame(xi = xi_values,   manual = round(kernel_values, 4))
+print(validation)
+
+
+# My (d)
+
+# Gaussian kernel smoother with bandwidth = 2
+smoothed <- ksmooth(traffic$hour, traffic$vehicles, kernel = "normal", bandwidth = 6, x.points = traffic$hour)
+traffic_smoothed <- data.frame(hour = smoothed$x, vehicles_smoothed = smoothed$y)
+print(traffic_smoothed)
+
+# Plot original data and smoothed curve
+plot(traffic$hour, traffic$vehicles, xlab = "Hour", ylab = "Vehicles", main = "Gaussian Kernel Smoother",
+     pch = 16, col = "black")
+lines(traffic_smoothed$hour, traffic_smoothed$vehicles_smoothed, col = "red", lwd = 2)
+
+
+# My (e)
+# Defining LOESS smoothers with varying degrees and spans
+loess_1_03 <- loess(vehicles ~ hour, data = traffic, degree = 1, span = 0.3)
+loess_1_075 <- loess(vehicles ~ hour, data = traffic, degree = 1, span = 0.75)
+loess_2_03 <- loess(vehicles ~ hour, data = traffic, degree = 2, span = 0.3)
+loess_2_075 <- loess(vehicles ~ hour, data = traffic, degree = 2, span = 0.75)
+
+# Predicting smoothed values at integer hours
+hours <- seq(6, 18, by = 0.1)
+pred_1_03 <- predict(loess_1_03, newdata = data.frame(hour = hours))
+pred_1_075 <- predict(loess_1_075, newdata = data.frame(hour = hours))
+pred_2_03 <- predict(loess_2_03, newdata = data.frame(hour = hours))
+pred_2_075 <- predict(loess_2_075, newdata = data.frame(hour = hours))
+
+# Creating scatter plot
+plot(traffic$hour, traffic$vehicles, xlab = "Hour", ylab = "Vehicles", main = "Fitting with LOESS Smoothers",
+     pch = 16, col = "black", ylim = c(150, 650))
+
+# Adding LOESS smoother lines
+lines(hours, pred_1_03, col = "red", lwd = 2, lty = 1)
+lines(hours, pred_1_075, col = "green", lwd = 2, lty = 2)
+lines(hours, pred_2_03, col = "orange", lwd = 2, lty = 3)
+lines(hours, pred_2_075, col = "blue", lwd = 2, lty = 4)
+legend("topleft", 
+       legend = c("Degree=1, Span=0.3", 
+                  "Degree=1, Span=0.75", 
+                  "Degree=2, Span=0.3", 
+                  "Degree=2, Span=0.75"), 
+       col = c("red", "green", "orange", "blue"), 
+       pch = c(NA, NA, NA, NA), 
+       lty = c(1, 2, 3, 4), 
+       lwd = c(2, 2, 2, 2))
+
+# Intepreting the behaviour
+# In LOESS smoothing, the span controls how much of the data is used in each local fit
+# Smaller spans like, 0.3) produce a more wiggly curve that closely follows the data but risks overfitting, while larger spans like 0.75 create smoother trends that may underfit local variation.
+# The degree determines the type of local regression.
+# A degree of 1 fits local lines, while degree of 2 fits local quadratic functions (more flexible).
+# Smaller spans and higher degrees increase sensitivity to local patterns, while larger spans and lower degrees prioritize smoothness.
+# A span = 0.75 and degree = 2 appears to fit the data well.
+
+
+A moderate span (e.g., 0.5) with degree = 2 often strikes a good balance between smoothness and capturing important variation.
+
+# legend("topright", legend = c("Original Data", "Gaussian Smoother"), 
+#        col = c("blue", "red"), pch = c(16, NA), lty = c(NA, 1))
+# 
+# Print smoothed values for comparison with Excel
+
+
+# -----------------------------###--------------------------
 ks_gauss <- ksmooth(hour, vehicles, kernel = "normal", bandwidth = 2)
 plot(hour, vehicles, main = "ksmooth (Gaussian kernel)", xlab = "Hour", ylab = "Vehicles")
 lines(ks_gauss, col = "blue")
