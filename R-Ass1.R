@@ -54,6 +54,9 @@ ks_gauss <- ksmooth(hour, vehicles, kernel = "normal", bandwidth = 2)
 plot(hour, vehicles, main = "ksmooth (Gaussian kernel)", xlab = "Hour", ylab = "Vehicles")
 lines(ks_gauss, col = "blue")
 
+?ksmooth()
+?ks.gauss()
+
 #(d)
 ks_gauss2 <- ksmooth(hour, vehicles, kernel = "normal", bandwidth = 1)
 lines(ks_gauss2, col = "red") # Compare with previous

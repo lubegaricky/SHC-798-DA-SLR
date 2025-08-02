@@ -1,0 +1,114 @@
+---
+title: "GLM-SEM Model"
+author: "Richard Lubega"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Model Development
+
+## Part 1: Generating Simulated Dataset
+
+```{r, Part-1}
+# Simulated Dataset:
+pacman::p_load(tidymodels)
+pacman::p_load(ggplot2) 
+
+set.seed(123)
+n <- 500
+
+freeway_data <- data.frame(
+  vehicle_id = 1:n,
+  std_speed = abs(rnorm(n, 5, 1.5)),  # speed variability
+  gap_var = abs(rnorm(n, 3, 1.2)),   # gap size variation
+  lane_density = rnorm(n, 30, 5),
+  short_headway = rbinom(n, 1, 0.4),
+  speed = rnorm(n, 100, 15),
+  accel = rnorm(n, 0.5, 0.2),
+  surrounding_gaps = rnorm(n, 2.5, 0.6),
+  onramp_distance = runif(n, 50, 300),
+  lane_change_freq = rpois(n, lambda = 2)  # target variable
+)
+
+head(freeway_data) # View first few rows of the dataset
+summary(freeway_data) # Get an overview of the dataset
+str(freeway_data)
+glimpse(freeway_data)
+
+
+# # Boxplot for city mpg by cylinders
+# boxplot(cty ~ cyl, data = mpg, 
+#         main = "City mpg by Number of Cylinders", 
+#         xlab = "Cylinders", 
+#         ylab = "City mpg (miles per gallon)")
+# 
+# # Boxplot for highway mpg by cylinders
+# boxplot(hwy ~ cyl, data = mpg, 
+#         main = "Highway mpg by Number of Cylinders", 
+#         xlab = "Cylinders", 
+#         ylab = "Highway mpg (miles per gallon)")
+# 
+# par(mfrow = c(1, 1)) # Reset plot layout to default
+# 
+# # Combine plots by faceting
+# cat("=== Combining the box plots for comparison ===\n")
+# mpg_comb <- mpg %>%
+#   select(cyl, cty, hwy) %>%
+#   pivot_longer(cols = c(cty, hwy), names_to = "fuel_econ", values_to = "mpg")
+# 
+# ggplot(mpg_comb, aes(x = factor(cyl), y = mpg, fill = fuel_econ)) +
+#   geom_boxplot(alpha = 0.7) +
+#   labs(title = "Fuel Efficiency by Number of Cylinders",
+#        x = "Number of Cylinders",
+#        y = "miles per gallon",
+#        fill = "Fuel Economy") +
+#   scale_fill_manual(values = c("cty" = "lightblue", "hwy" = "lightcoral"),
+#                     labels = c("City", "Highway")) +
+#   theme_minimal() +
+#   theme(plot.title = element_text(hjust = 0.5))
+# 
+# #---------  Median Values by cylinder count -------------
+# cat("=== Median Values by cylinder count ===\n")
+# mpg %>%
+#   group_by(cyl) %>%
+#   summarise(
+#     median_cty = median(cty),
+#     median_hwy = median(hwy),
+#     .groups = 'drop'
+#   )
+# 
+# cat("=== Trend Analysis ===\n")
+```
+
+## Part 1: Model Building and Analysis
+
+
+```{r, Part-2}
+
+pacman::p_load(lavaan)
+
+model <- '
+  # Measurement model
+  FI =~ std_speed + gap_var + lane_density
+  DU =~ speed + short_headway + accel
+  PO =~ surrounding_gaps + onramp_distance
+
+  # Structural model
+  lane_change_freq ~ FI + DU + PO
+'
+
+fit <- sem(model, data = freeway_data, estimator = "MLM")
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+```
+
+Therefore, based on the analysis, .......
+
+
