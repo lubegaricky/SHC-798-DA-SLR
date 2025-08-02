@@ -3,9 +3,9 @@ title: "GLM-SEM Model"
 author: "Richard Lubega"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document:
     latex_engine: xelatex
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -58,33 +58,7 @@ glimpse(freeway_data)
 # par(mfrow = c(1, 1)) # Reset plot layout to default
 # 
 # # Combine plots by faceting
-# cat("=== Combining the box plots for comparison ===\n")
-# mpg_comb <- mpg %>%
-#   select(cyl, cty, hwy) %>%
-#   pivot_longer(cols = c(cty, hwy), names_to = "fuel_econ", values_to = "mpg")
-# 
-# ggplot(mpg_comb, aes(x = factor(cyl), y = mpg, fill = fuel_econ)) +
-#   geom_boxplot(alpha = 0.7) +
-#   labs(title = "Fuel Efficiency by Number of Cylinders",
-#        x = "Number of Cylinders",
-#        y = "miles per gallon",
-#        fill = "Fuel Economy") +
-#   scale_fill_manual(values = c("cty" = "lightblue", "hwy" = "lightcoral"),
-#                     labels = c("City", "Highway")) +
-#   theme_minimal() +
-#   theme(plot.title = element_text(hjust = 0.5))
-# 
-# #---------  Median Values by cylinder count -------------
-# cat("=== Median Values by cylinder count ===\n")
-# mpg %>%
-#   group_by(cyl) %>%
-#   summarise(
-#     median_cty = median(cty),
-#     median_hwy = median(hwy),
-#     .groups = 'drop'
-#   )
-# 
-# cat("=== Trend Analysis ===\n")
+
 ```
 
 ## Part 1: Model Building and Analysis
@@ -108,10 +82,10 @@ fit <- sem(model, data = freeway_data, estimator = "MLM")
 summary(fit, fit.measures = TRUE, standardized = TRUE)
 
 # Check model degrees of freedom
-lavInspect(fit, "df")
+# lavInspect(fit, "df")
 
 # Print modification indices
-modindices(fit, sort = TRUE, minimum.value = 10)
+# modindices(fit, sort = TRUE, minimum.value = 10)
 
 # Step 2: Extract factor scores
 latent_scores <- lavPredict(fit)
@@ -132,8 +106,8 @@ plot(glm_fit)
 par(mfrow = c(1,1))
 
 pacman::p_load(BiocManager)
-pacman::p_load(countreg)
-rootogram(glm_fit)  # visually compares observed vs. predicted counts
+# pacman::p_load(countreg)
+# rootogram(glm_fit)  # visually compares observed vs. predicted counts
 
 
 
