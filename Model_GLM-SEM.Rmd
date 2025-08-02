@@ -3,9 +3,9 @@ title: "GLM-SEM Model"
 author: "Richard Lubega"
 date: "`r Sys.Date()`"
 output:
+  html_document: default
   pdf_document:
     latex_engine: xelatex
-  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -106,6 +106,53 @@ model <- '
 
 fit <- sem(model, data = freeway_data, estimator = "MLM")
 summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+# Check model degrees of freedom
+lavInspect(fit, "df")
+
+# Print modification indices
+modindices(fit, sort = TRUE, minimum.value = 10)
+
+# Step 2: Extract factor scores
+latent_scores <- lavPredict(fit)
+
+# Merge with original data
+hybrid_data <- cbind(freeway_data, latent_scores)
+
+# Poisson (Count Model)
+glm_fit <- glm(lane_change_freq ~ FI + DU + PO,
+               data = hybrid_data,
+               family = poisson(link = "log"))
+
+summary(glm_fit)
+
+# Using base R for diagnostics
+par(mfrow = c(2, 2))
+plot(glm_fit)
+par(mfrow = c(1,1))
+
+pacman::p_load(BiocManager)
+pacman::p_load(countreg)
+rootogram(glm_fit)  # visually compares observed vs. predicted counts
+
+
+
+# Negative Binomial (in case of overdispersion)
+pacman::p_load(MASS)
+
+nb_fit <- glm.nb(lane_change_freq ~ FI + DU + PO, data = hybrid_data)
+summary(nb_fit)
+
+# Logistic Model (Lane-Change Occurrence)
+# modeling whether a vehicle changed lanes or not (i.e., binary variable)
+hybrid_data$changed_lane <- ifelse(hybrid_data$lane_change_freq > 0, 1, 0)
+
+logit_fit <- glm(changed_lane ~ FI + DU + PO,
+                 data = hybrid_data,
+                 family = binomial(link = "logit"))
+
+summary(logit_fit)
+
 
 ```
 
