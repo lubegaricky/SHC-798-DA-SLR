@@ -1,5 +1,5 @@
 ---
-title: "SHC 798 Assignment 1, 2025"
+title: "SHC 798 Assignment 2, 2025"
 author: "Richard Lubega"
 date: "`r Sys.Date()`"
 output:
@@ -12,12 +12,14 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# SHC 798 Assignment 1, 2025
+# SHC 798 Assignment 2, 2025
 
-## Part 1: Data Analysis with R
+## Multiple Linear Analysis (MLR)
 
-```{r, Part-1-a_b}
-# Getting Started with the Dataset:
+### Question 1: Concrete Strength
+
+```{r, Part-1-a}
+# Getting Started with the dataset in concrete.rda :
 pacman::p_load(ggplot2) 
 pacman::p_load(tidymodels) 
 
@@ -207,4 +209,3 @@ The p-value for displ is very small (\< 2.2e-16), meaning the relationship is st
 
 -   The **negative coefficient** for *displ* (-3.5306) supports the belief that cars with smaller engines have better fuel efficiency. As engine size increases, highway fuel economy decreases significantly, with a 1-liter increase in displacement leading to a 3.53 mpg reduction in fuel efficiency, on average. The highly significant **p-values** for both the displ coefficient and the overall model (\< 2e-16) confirm that the negative relationship between engine size and fuel efficiency is *not due to random chance*. This strengthens the conclusion that engine size is a reliable predictor of fuel efficiency.
 -   The **R-squared value** (0.5868) indicates that engine size alone doesn't explain all the variability in fuel efficiency, so the remaining 41.32% of variability implies other factors (like, vehicle weight, car transmission type, or car drive type) also influence fuel efficiency.
-
