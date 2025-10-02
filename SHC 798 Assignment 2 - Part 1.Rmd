@@ -19,13 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Question 1: Concrete Strength
 
 ```{r, Part-1-a}
-# Getting Started with the dataset in concrete.rda :
-pacman::p_load(ggplot2) 
-pacman::p_load(tidymodels) 
-
-head(mpg) # View first few rows of the dataset
-summary(mpg) # Get an overview of the dataset
-
+# S
 #(a)
 # average city and highway fuel economy across all vehicle classes
 cat("=== Average city and highway fuel economy, afe, across all vehicle classes ===\n")
