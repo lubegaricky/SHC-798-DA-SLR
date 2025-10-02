@@ -207,3 +207,33 @@ result <- data.frame(City_MPG = mpg$cty, Highway_MPG = mpg$hwy)
 rownames(result) <- mpg$model
 # View result
 print(result)
+
+
+# ================================
+# Getting started with the dataset in concrete.csv :
+pacman::p_load(ggplot2) 
+pacman::p_load(tidymodels)
+
+concrete <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
+
+head(concrete) # View first few rows of the dataset
+summary(concrete) # Get an overview of the dataset
+str(concrete)
+view(concrete)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
