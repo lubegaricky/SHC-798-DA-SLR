@@ -209,7 +209,12 @@ rownames(result) <- mpg$model
 print(result)
 
 
-# ================================
+# ================================================================================
+
+#=============================================================================
+
+
+
 # Getting started with the dataset in concrete.csv :
 pacman::p_load(ggplot2) 
 pacman::p_load(tidymodels)
@@ -275,14 +280,32 @@ plot(concrete$age, concrete$strength, main = "Strength vs Age",
 par(mfrow = c(1, 1))
 
 
+# Part b): Multicollinearity among predictors
+# (i) Pearson correlation coefficients
+cor(concrete, method = "pearson")
+
+# Compute the correlation matrix - Same!
+cor_matrix <- cor(concrete[, c("cement","wcr","age","strength")])
+print(cor_matrix)
 
 
+# (ii) An ellipse plot to visualise collinearity
+pacman::p_load(ellipse)
+plotcorr(cor(concrete))
 
 
+# (iii) Variance Inflation Factors
+pacman::p_load(car)
+conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
+vif(conc_model)
 
+# Part C
+conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
+conc_model
+summary(conc_model)
+confint(conc_model$intercept)
 
-
-
+# Comment on the Model output
 
 
 

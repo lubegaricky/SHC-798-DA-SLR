@@ -97,8 +97,63 @@ s3 <- ggplot(concrete, aes(x = age, y = strength)) +
 grid.arrange(s1, s2, s3, ncol = 2)
 
 
+# =============================================================================
+# ==============================================================================
+  
 # New Trial 2
+# Load the data (assuming it's in a CSV file named 'concrete.csv')
+# concrete <- read.csv("concrete.csv")
 
+# Set up a 2x2 plotting area for histograms with overlaid density plots
+par(mfrow = c(2, 2))
+
+# a & b) Histograms with Overlaid Marginal Density Distributions
+# Histogram and density for cement
+hist(concrete$cement, main = "Histogram of Cement with Density", 
+     xlab = "Cement", col = "lightblue", probability = TRUE, breaks = 15)
+lines(density(concrete$cement), col = "red", lwd = 2)
+
+# Histogram and density for wcr
+hist(concrete$wcr, main = "Histogram of WCR with Density", 
+     xlab = "WCR", col = "lightgreen", probability = TRUE, breaks = 15)
+lines(density(concrete$wcr), col = "red", lwd = 2)
+
+# Histogram and density for age
+hist(concrete$age, main = "Histogram of Age with Density", 
+     xlab = "Age", col = "lightcoral", probability = TRUE, breaks = 15)
+lines(density(concrete$age), col = "red", lwd = 2)
+
+# Histogram and density for strength
+hist(concrete$strength, main = "Histogram of Strength with Density", 
+     xlab = "Strength", col = "purple", probability = TRUE, breaks = 15)
+lines(density(concrete$strength), col = "red", lwd = 2)
+par(mfrow = c(1, 1))
+
+
+# Reset plotting parameters for scatter plots
+par(mfrow = c(2, 2))
+
+# c) Scatter Plots of Strength against each Predictor
+# Scatter plot: Strength vs Cement
+plot(concrete$cement, concrete$strength, main = "Strength vs Cement", 
+     xlab = "Cement", ylab = "Strength", pch = 16, col = "blue")
+# abline(lm(strength ~ cement, data = concrete), col = "red", lwd = 2)
+
+# Scatter plot: Strength vs WCR
+plot(concrete$wcr, concrete$strength, main = "Strength vs WCR", 
+     xlab = "WCR", ylab = "Strength", pch = 16, col = "green")
+# abline(lm(strength ~ wcr, data = concrete), col = "red", lwd = 2)
+
+# Scatter plot: Strength vs Age
+plot(concrete$age, concrete$strength, main = "Strength vs Age", 
+     xlab = "Age", ylab = "Strength", pch = 16, col = "red")
+# abline(lm(strength ~ age, data = concrete), col = "blue", lwd = 2)
+
+# Reset plotting parameters to default
+par(mfrow = c(1, 1))
+
+# b) Summary statistics for marginal distributions
+summary(concrete)
 
 
 
