@@ -156,11 +156,38 @@ par(mfrow = c(1, 1))
 summary(concrete)
 
 
+# Part B
+# Plot correlation ellipses
+plotcorr(cor_matrix, col = "blue", main = "Correlation Ellipse Plot")
 
 
+# ===============================================================================================
+# ==================================================================================================
+
+# Model with Age as a Factor variable
+concrete2 <- concrete
+concrete2$age <- as.character(concrete2$age)
+str(concrete2)
+conc_f <- lm(strength ~ cement + wcr + age, data = concrete2)
+conc_f
+summary(conc_f)
+
+# (i) Pearson correlation coefficients
+cor(concrete2, method = "pearson")
+
+# Compute the correlation matrix - Same!
+cor_matx <- cor(concrete2[, c("cement","wcr","age","strength")])
+print(cor_matx)
 
 
+# (ii) An ellipse plot to visualise collinearity
+pacman::p_load(ellipse)
+plotcorr(cor(concrete2))
 
 
+# (iii) Variance Inflation Factors (VIFs)
+pacman::p_load(car)
+conc_f <- lm(strength ~ cement + wcr + age, data = concrete2)
+vif(conc_f)
 
 

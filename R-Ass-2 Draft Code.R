@@ -294,18 +294,59 @@ pacman::p_load(ellipse)
 plotcorr(cor(concrete))
 
 
-# (iii) Variance Inflation Factors
+# (iii) Variance Inflation Factors (VIFs)
 pacman::p_load(car)
 conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
 vif(conc_model)
 
 # Part C
+# Part-C-1
 conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
 conc_model
 summary(conc_model)
-confint(conc_model$intercept)
+confint(conc_model)
+confint(conc_model)["(Intercept)", ]
 
-# Comment on the Model output
+# Part C-2: Comment on the Model output
+# -Regression coefficients
+# -Model significance
+# -Adequacy of fit, and
+# -Appropriateness of fit
+
+## Residual analysis
+plot(conc_model, which=1)
+resplot(conc_model, plots = 1)
+
+plot(conc_model, which = 2)
+resplot(conc_model, plots = 2)
+
+## Scale-location plot
+plot(conc_model, which = 3)
+resplot(conc_model, plots = 3)
+
+## Cook's Distance plot
+plot(conc_model, which = 4)
+plot(conc_model, which = 5)
+resplot(conc_model, plots = 4)
+
+# Part b): Variable Selection
+# Backward Elimination
+summary(conc_model)
+drop1(conc_model, test="F")
+
+
+# Forward Selection
+
+
+# AIC Stepwise
+
+
+
+
+# Part f): Prediction
+conc.str <- data.frame(cement=350, wcr=0.5, age=28)
+predict(conc_model, newdata = conc.str, interval = "conf")
+predict(conc_model, newdata = conc.str, interval = "pred")
 
 
 
