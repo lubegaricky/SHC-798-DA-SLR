@@ -5,7 +5,6 @@
 #=============================================================================
 
 
-
 # Getting started with the dataset in concrete.csv :
 pacman::p_load(ggplot2) 
 pacman::p_load(tidymodels)
@@ -15,7 +14,7 @@ concrete <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
 head(concrete) # View first few rows of the dataset
 summary(concrete) # Get an overview of the dataset
 str(concrete)
-view(concrete)
+# view(concrete)
 unique(concrete$age)
 # unique(concrete$cement)
 # unique(concrete$wcr)
@@ -93,7 +92,6 @@ vif(conc_model)
 # Part C
 # Part-C-1
 conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
-conc_model
 summary(conc_model)
 confint(conc_model)
 confint(conc_model)["(Intercept)", ]
@@ -119,6 +117,11 @@ resplot(conc_model, plots = 3)
 plot(conc_model, which = 4)
 plot(conc_model, which = 5)
 resplot(conc_model, plots = 4)
+
+# Autocorrelation using the Durbin-Watson test
+pacman::p_load(lmtest)
+dwtest(conc_model)
+
 
 
 # Part d): Variable Selection
@@ -227,12 +230,108 @@ predict(conc_model, newdata = conc.str, interval = "pred")
 
 #
 # ====================================================================================================
+
 # =======================================================================================================
+
 # =======================================================================================================
 
 # Question 2
 # Energy consumption data from 80 office buildings
 
-Part a): Multicollinearity
+# Getting started with the dataset in energy.csv :
 
+e.consump <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
+
+head(e.consump) # View first few rows of the dataset
+summary(e.consump) # Get an overview of the dataset
+str(e.consump) # inspect the dataset and viewing column data types
+# view(e.consump) # views entire dataset
+
+# View variables
+par(mfrow=c(2,2))
+for (i in 1:4) hist(e.consump[,i], main=names(e.consump)[i])
+par(mfrow = c(1, 1))
+
+
+# Part a): Multicollinearity
+# (i) Pearson correlation coefficients
+cor(e.consump, method = "pearson")
+
+# Compute the correlation matrix - Same!
+cor_matrix <- cor(e.consump[, c("area","occup","climate", "glazing", "insulation", "energy")])
+print(cor_matrix)
+
+
+# (ii) An ellipse plot to visualise collinearity
+pacman::p_load(ellipse)
+plotcorr(cor(e.consump))
+
+
+# (iii) Variance Inflation Factors (VIFs)
+pacman::p_load(car)
+engy_model <- lm(energy ~ area + occup + climate + glazing + insulation, data = e.consump)
+vif(engy_model)
+
+
+# Part b): Model and Predictor Linearity
+# Initial Model Output
+summary(engy_model)
+confint(engy_model)
+confint(engy_model)["(Intercept)", ]
+resplot(engy_model)
+
+# Linearity of each predictor - Use of Partial Residual Plots
+pacman::p_load(car)
+crPlots(engy_model)
+crPlots(engy_model, layout = c(1,1))
+
+# Tried Package faraway
+pacman::p_load(faraway)
+prplot(engy_model, 4)
+# ?prplot()
+
+# Transformed Model 1
+engy_model2 <- lm(energy ~ area + log(occup) + climate + glazing + insulation, data = e.consump)
+summary(engy_model2)
+crPlots(engy_model2)
+resplot(engy_model2)
+
+# Transformed Model 2
+engy_model3 <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump)
+summary(engy_model3)
+crPlots(engy_model3)
+resplot(engy_model3)
+
+# Part c) Variable Selection
+# Backward Elimination with AIC
+# drop1(conc_model, test="F")
+conc.back <- stats::step(conc_model, direction="backward")
+summary(conc.back)
+resplot(conc.back)
+
+# Forward Selection with AIC
+# add1(conc_null, scope=conc_model, test="F")
+conc_null <- lm(strength ~ 1, data = concrete) # Intercept-only model
+sc <- list(lower=conc_null, upper=conc_model)
+conc.forw <- stats::step(conc_null, scope=sc, direction="forward", k=2)
+summary(conc.forw)
+resplot(conc.forw)
+
+
+# AIC Stepwise Model Search: Both Directions Approach
+# starting with the null model
+conc.b1 <- stats::step(conc_null, scope = sc, direction = "both")
+summary(conc.b1)
+resplot(conc.b1)
+
+# starting with the full model
+conc.b2 <- stats::step(conc_model, scope = sc, direction = "both")
+summary(conc.b2)
+resplot(conc.b2)
+
+# starting with a model somewhere in the middle
+conc_mid <- lm(strength ~  wcr + age, data = concrete)
+conc.b3 <- stats::step(conc_mid, scope = sc, direction = "both")
+summary(conc.b3)
+resplot(conc.b3)
 
