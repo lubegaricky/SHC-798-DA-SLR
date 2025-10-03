@@ -278,6 +278,23 @@ vif(engy_model)
 summary(engy_model)
 confint(engy_model)
 confint(engy_model)["(Intercept)", ]
+
+## Residual analysis 1
+plot(engy_model, which=1)
+resplot(engy_model, plots = 1)
+
+plot(engy_model, which = 2)
+resplot(engy_model, plots = 2)
+
+## Scale-location plot
+plot(engy_model, which = 3)
+resplot(engy_model, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model, which = 4)
+plot(engy_model, which = 5)
+resplot(engy_model, plots = 4)
+
 resplot(engy_model)
 
 # Linearity of each predictor - Use of Partial Residual Plots
@@ -294,14 +311,47 @@ prplot(engy_model, 4)
 engy_model2 <- lm(energy ~ area + log(occup) + climate + glazing + insulation, data = e.consump)
 summary(engy_model2)
 crPlots(engy_model2)
+
+## Residual analysis 2
+plot(engy_model2, which=1)
+resplot(engy_model2, plots = 1)
+
+plot(engy_model2, which = 2)
+resplot(engy_model2, plots = 2)
+
+## Scale-location plot
+plot(engy_model2, which = 3)
+resplot(engy_model2, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model2, which = 4)
+plot(engy_model2, which = 5)
+resplot(engy_model2, plots = 4)
+
 resplot(engy_model2)
 
 # Transformed Model 2
 engy_model3 <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump)
 summary(engy_model3)
 crPlots(engy_model3)
-resplot(engy_model3)
 
+## Residual analysis 3
+plot(engy_model3, which=1)
+resplot(engy_model3, plots = 1)
+
+plot(engy_model3, which = 2)
+resplot(engy_model3, plots = 2)
+
+## Scale-location plot
+plot(engy_model3, which = 3)
+resplot(engy_model3, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model3, which = 4)
+plot(engy_model, which = 5)
+resplot(engy_model3, plots = 4)
+
+resplot(engy_model3)
 
 
 # ===================================================================

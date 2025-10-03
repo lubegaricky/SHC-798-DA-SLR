@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Multiple Linear Analysis (MLR)
 
-### Question 1: Concrete Strength
+### Question 2: # Energy consumption data from 80 office buildings
 
 
 ```{r resplot, include=FALSE}
@@ -79,179 +79,162 @@ resplot <- function(obj, plots=1:4)
 ```{r, Part-1-a}
 pacman::p_load(tidymodels)
 
-# Getting started with the dataset in concrete.csv
-concrete <- read.csv(file.choose(), header = TRUE, na.strings = c("NA")) # open dataset
-head(concrete) # View first few rows of the dataset
-summary(concrete) # Get an overview of the dataset
-str(concrete) # inspect the dataset and viewing column data types
-# view(concrete)
-unique(concrete$age)
+# Getting started with the dataset in energy.csv :
+e.consump <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
+head(e.consump) # View first few rows of the dataset
+summary(e.consump) # Get an overview of the dataset
+str(e.consump) # inspect the dataset and viewing column data types
 
-# Part a): Data Preparation
-# [a-1] Histograms with overlaid marginal density distributions
-par(mfrow = c(2, 2))
-
-# cement
-hist(concrete$cement, main = "Histogram of Cement with Density", 
-     xlab = "Cement", col = "lightblue", probability = TRUE, breaks = 15)
-lines(density(concrete$cement), col = "red", lwd = 2)
-
-# wcr
-hist(concrete$wcr, main = "Histogram of WCR with Density", 
-     xlab = "WCR", col = "lightgreen", probability = TRUE, breaks = 15)
-lines(density(concrete$wcr), col = "red", lwd = 2)
-
-# age
-hist(concrete$age, main = "Histogram of Age with Density", 
-     xlab = "Age", col = "lightcoral", probability = TRUE, breaks = 15)
-lines(density(concrete$age), col = "red", lwd = 2)
-
-# strength
-hist(concrete$strength, main = "Histogram of Strength with Density", 
-     xlab = "Strength", col = "purple", probability = TRUE, breaks = 15)
-lines(density(concrete$strength), col = "red", lwd = 2)
-
+# View variables
+par(mfrow=c(3,2))
+for (i in 1:6) hist(e.consump[,i], main=names(e.consump)[i])
 par(mfrow = c(1, 1))
 
-# [a-2] Scatter Plots of Strength against each Predictor
-par(mfrow = c(2, 2))
-
-# Strength vs Cement
-plot(concrete$cement, concrete$strength, main = "Strength vs Cement", 
-     xlab = "Cement", ylab = "Strength", pch = 16, col = "blue")
-
-
-# Strength vs WCR
-plot(concrete$wcr, concrete$strength, main = "Strength vs WCR", 
-     xlab = "WCR", ylab = "Strength", pch = 16, col = "green")
-
-# Strength vs Age
-plot(concrete$age, concrete$strength, main = "Strength vs Age", 
-     xlab = "Age", ylab = "Strength", pch = 16, col = "red")
-
-par(mfrow = c(1, 1))
-
-
-```
-
-#### **Commenting on the Trend and Need for Variable Transformation**
-
-The marginal plots are not skewed. No clear need for variable transformations
-
-The scatter plot for strength vs age indicates has distinct values (7, 14, 28, 56) which suggests a discrete or categorical nature rather than continuous. The marginal plots also show spikes at these specific ages rather than a smooth distribution.
-
-Therefore, age may be as a **categorical variable** (factor) in regression to account for its discrete levels. Including *interaction terms* (e.g., cement:age, wcr:age) in such a regression model may be also necessary.
-
-```{r, Part-1-b}
-# Part b): Multicollinearity among predictors
-
+# Part a): Multicollinearity
 # (i) Pearson correlation coefficients
-cor(concrete, method = "pearson")
-
-# Compute the correlation matrix - Same!
-cor_matrix <- cor(concrete[, c("cement","wcr","age","strength")])
-print(cor_matrix)
-
+cor(e.consump, method = "pearson")
 
 # (ii) An ellipse plot to visualise collinearity
 pacman::p_load(ellipse)
-plotcorr(cor(concrete))
-
+plotcorr(cor(e.consump))
 
 # (iii) Variance Inflation Factors (VIFs)
 pacman::p_load(car)
-conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
-vif(conc_model)
+engy_model <- lm(energy ~ area + occup + climate + glazing + insulation, data = e.consump)
+vif(engy_model)
 
 ```
 
-From the above **collinearity audit** checks (Pearson correlation coefficients and the ellipse plot), the somewhat elongated ellipses, particularly between cement and strength (0.46578632), and age and strength (0.6345642), suggest potential multicollinearity among these predictors.
+#### **Commenting on Multicollinearity**
 
-This indicates that the predictors may be highly correlated with each other and with the response variable, but Since all VIF values are very close to 1 (well below 5), there is **no significant multicollinearity** among the predictors. This suggests that the predictors are largely independent of each other, which is ideal for a stable regression model.
+In the correlogram (ellipse plot), narrow/elongated ellipses indicate stronger correlation. Energy has elongated ellipses with area (0.5672719) and occupancy (0.71535501), indicating moderate to strong positive correlation. Also, area and occupancy are noticeably correlated with narrow tilted ellipse (0.60076867) which indicates collinearity. Therefore, there is some multicollinearity between area and occupancy, and to a lesser extent between energy and these two variables.
 
-```{r, Part-1-c}
-# Part-C-1 Model
-conc_model <- lm(strength ~ cement + wcr + age, data = concrete)
-summary(conc_model)
-confint(conc_model)
+Since all VIF values are very well below 5, there is **no significant multicollinearity** among the predictors for the model, engy_model. This suggests that the predictors can be considered independent of each other for this regression model.
 
-# Part C-2: Comment on the Model output
-# -Regression coefficients
-# -Model significance
-# -Adequacy of fit, and
-# -Appropriateness of fit
 
-## Residual analysis
-plot(conc_model, which=1)
-resplot(conc_model, plots = 1)
 
-plot(conc_model, which = 2)
-resplot(conc_model, plots = 2)
+```{r, Part-1-b}
+# Part b): Model and Predictor Linearity
+# Initial Model Output
+summary(engy_model)
+confint(engy_model)
+confint(engy_model)["(Intercept)", ]
+
+## Residual analysis 1
+plot(engy_model, which=1)
+resplot(engy_model, plots = 1)
+
+plot(engy_model, which = 2)
+resplot(engy_model, plots = 2)
 
 ## Scale-location plot
-plot(conc_model, which = 3)
-resplot(conc_model, plots = 3)
+plot(engy_model, which = 3)
+resplot(engy_model, plots = 3)
 
 ## Cook's Distance plot
-plot(conc_model, which = 4)
-plot(conc_model, which = 5)
-resplot(conc_model, plots = 4)
+plot(engy_model, which = 4)
+plot(engy_model, which = 5)
+resplot(engy_model, plots = 4)
 
-# Autocorrelation using the Durbin-Watson test
-pacman::p_load(lmtest)
-dwtest(conc_model)
+resplot(engy_model)
 
+# Linearity of each predictor - Use of Partial Residual Plots
+pacman::p_load(car)
+crPlots(engy_model)
+crPlots(engy_model, layout = c(1,1))
+
+
+# Transformed Model 1
+engy_model2 <- lm(energy ~ area + log(occup) + climate + glazing + insulation, data = e.consump)
+summary(engy_model2)
+crPlots(engy_model2)
+
+## Residual analysis 2
+plot(engy_model2, which=1)
+resplot(engy_model2, plots = 1)
+
+plot(engy_model2, which = 2)
+resplot(engy_model2, plots = 2)
+
+## Scale-location plot
+plot(engy_model2, which = 3)
+resplot(engy_model2, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model2, which = 4)
+plot(engy_model2, which = 5)
+resplot(engy_model2, plots = 4)
+
+resplot(engy_model2)
+
+# Transformed Model 2
+engy_model3 <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump)
+summary(engy_model3)
+crPlots(engy_model3)
+
+## Residual analysis 3
+plot(engy_model3, which=1)
+resplot(engy_model3, plots = 1)
+
+plot(engy_model3, which = 2)
+resplot(engy_model3, plots = 2)
+
+## Scale-location plot
+plot(engy_model3, which = 3)
+resplot(engy_model3, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model3, which = 4)
+plot(engy_model, which = 5)
+resplot(engy_model3, plots = 4)
+
+resplot(engy_model3)
 ```
 
-Assumptions not violated, No Autocorrelation.
+From the partial plots of the initial/original (engy_model) predictors, the variables area and occupancy clearly deviate from the dotted blue line which indicates non-linearity. 
+In the first transformed model (engy_model2), the linearity of both variables are seen to improve. Also, the model diagnostics are better for this transformed model. From the Adjusted R2, this model also fits the data better (0.7371 > 0.5774) than the original/initial model.
 
-```{r, Part-1-d}
-# Part d): Variable Selection
+In the second transformed model (engy_model3), the variable linearity, residual plots and model fit are better than both the original and the first transformed model (engy_model2).
+
+Therefore, this model is taken as the most appropriate.
+
+
+```{r, Part-1-c}
+# Part c) Variable Selection starting with the transformed model
+
 # Backward Elimination with AIC
-conc.back <- stats::step(conc_model, direction="backward")
-summary(conc.back)
-resplot(conc.back)
-
-# Forward Selection with AIC
-conc_null <- lm(strength ~ 1, data = concrete) # Intercept-only model
-sc <- list(lower=conc_null, upper=conc_model)
-conc.forw <- stats::step(conc_null, scope=sc, direction="forward", k=2)
-summary(conc.forw)
-resplot(conc.forw)
-
+engy.back <- stats::step(engy_model3, direction="backward")
+summary(engy.back)
+resplot(engy.back)
 
 # AIC Stepwise Model Search: Both Directions Approach
 # starting with the null model
-conc.b1 <- stats::step(conc_null, scope = sc, direction = "both")
-summary(conc.b1)
-resplot(conc.b1)
+engy_null <- lm(energy ~ 1, data = e.consump) # Intercept-only model
+sc <- list(lower=engy_null, upper=engy_model3)
+engy.b1 <- stats::step(engy_null, scope = sc, direction = "both")
+summary(engy.b1)
+resplot(engy.b1)
 
 # starting with the full model
-conc.b2 <- stats::step(conc_model, scope = sc, direction = "both")
-summary(conc.b2)
-resplot(conc.b2)
+engy.b2 <- stats::step(engy_model3, scope = sc, direction = "both")
+summary(engy.b2)
+resplot(engy.b2)
 
 # starting with a model somewhere in the middle
-conc_mid <- lm(strength ~  wcr + age, data = concrete)
-conc.b3 <- stats::step(conc_mid, scope = sc, direction = "both")
-summary(conc.b3)
-resplot(conc.b3)
-
-# AIC is used when the principal aim is the prediction
+engy.mid <- lm(energy ~  climate + glazing, data = e.consump)
+engy.b3<- stats::step(engy.mid, scope = sc, direction = "both")
+summary(engy.b3)
+resplot(engy.b3)
 
 ```
 
-All predictors are kept in all 6 models. There are no major improvements in residual plots for all the models. Also, no noticeable changes on predictor significance or model fit.
+In all the reduced models from applying variable selection (i.e., engy.back, engy.b1, engy.b2 and engy.b3), the variable glazing was dropped. There are no major improvements in residual plots for all the models. Also, no noticeable changes on predictor significance or model fit.
 
 
-```{r, Part-1-e}
-# Part e) 5-fold cross validation
-# Full Model is (strength ~ cement + wcr + age)
-# Reduced Model is (strength ~ cement + age); wcr is dropped to see effect on prediction performance
-
+```{r, Part-1-d}
+# Part d) 5-fold cross validation
 set.seed(123) # Set seed for reproducibility
-
-n <- nrow(concrete) # Number of observations
+n <- nrow(e.consump) # Number of observations and folds
 k <- 5 # Number of folds
 sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
 
@@ -259,25 +242,25 @@ sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
 mspe_full <- numeric(k)
 mspe_reduced <- numeric(k)
 
-# 5-fold cross-validation for full model (strength ~ cement + wcr + age)
+# 5-fold cross-validation for full model (engy_model3)
 for (i in 1:k) {
   test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
   train <- (1:n)[-test]
-  fit_full <- lm(strength ~ cement + wcr + age, data = concrete[train, ])
-  pred_full <- predict(fit_full, newdata = concrete[test, ])
-  mspe_full[i] <- mean((concrete$strength[test] - pred_full)^2, na.rm = TRUE)
+  fit_full <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump[train, ])
+  pred_full <- predict(fit_full, newdata = e.consump[test, ])
+  mspe_full[i] <- mean((e.consump$energy[test] - pred_full)^2, na.rm = FALSE)
 }
 
-# 5-fold cross-validation for reduced model (strength ~ cement + age)
+# 5-fold cross-validation for reduced model (dropping glazing)
 for (i in 1:k) {
-  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split comparability
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split for comparability
   train <- (1:n)[-test]
-  fit_reduced <- lm(strength ~ cement + age, data = concrete[train, ])
-  pred_reduced <- predict(fit_reduced, newdata = concrete[test, ])
-  mspe_reduced[i] <- mean((concrete$strength[test] - pred_reduced)^2, na.rm = TRUE)
+  fit_reduced <- lm(energy ~ log(area) + log(occup) + climate + insulation, data = e.consump[train, ])
+  pred_reduced <- predict(fit_reduced, newdata = e.consump[test, ])
+  mspe_reduced[i] <- mean((e.consump$energy[test] - pred_reduced)^2, na.rm = FALSE)
 }
 
-# Calculating overall MSPE for each model
+# Calculate overall MSPE for each model
 mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
 mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
 
@@ -287,35 +270,27 @@ cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
 cat("MSPE for Full Model:", mspe_full_mean, "\n")
 cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
 
-# Relative increase in MSPE
+# Checking relative increase in MSPE
 relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
 cat("Relative increase in MSPE (%):", relative_increase, "\n")
 
-# Box plots using MSPEs
+# Box plots Using MSPEs
 # Combining MSPEs into a data frame for plotting
 mspe_data <- data.frame(
   MSPE = c(mspe_full, mspe_reduced),
   Model = factor(rep(c("Full", "Reduced"), each = k))
 )
-
 # Generating box plots
 boxplot(MSPE ~ Model, data = mspe_data, 
         main = "MSPE Comparison: Full vs Reduced Model",
-        ylab = "Mean Squared Prediction Error (MPa²)",
-        col = c("lightblue", "lightgreen"),
+        ylab = "Mean Squared Prediction Error",
+        col = c("purple", "lightgreen"),
         border = "black")
 
 ```
 
-From the cross-validation exercise, The MSPE for the reduced is substantially higher (25.29973%) than the full model. Therefore, the variable wcr adds predictive power and the full model is preferable for prediction purposes.
+From the cross-validation exercise, The MSPE for the reduced model is less (-1.275735%) than the full model. Therefore, the variable glazing can be said to reduce the predictive power in model. Therefore, the reduced model is preferable for prediction purposes.
 
-```{r Part-1-f}
-# Part f): Prediction
-conc.str <- data.frame(cement=350, wcr=0.5, age=28)
-# predict(conc_model, newdata = conc.str, interval = "conf")
-predict(conc_model, newdata = conc.str, interval = "pred")
-
-```
 
 
 
