@@ -287,3 +287,35 @@ if (any(concrete$strength < 0)) {
   cat("Warning: Negative strength value (-0.7) detected, consider removing or correcting this outlier.\n")
 }
 
+
+# Box plots
+
+# Using MSPEs
+# Combine MSPEs into a data frame for plotting
+mspe_data <- data.frame(
+  MSPE = c(mspe_full, mspe_reduced),
+  Model = factor(rep(c("Full", "Reduced"), each = k))
+)
+
+# Generate box plots
+boxplot(MSPE ~ Model, data = mspe_data, 
+        main = "MSPE Comparison: Full vs Reduced Model",
+        ylab = "Mean Squared Prediction Error (MPa²)",
+        col = c("lightblue", "lightgreen"),
+        border = "black")
+
+# Using the squared prediction errors
+# Combine squared prediction errors into a data frame
+spe_full <- vector("list", k)
+spe_reduced <- vector("list", k)
+spe_data <- data.frame(
+  SPE = unlist(c(spe_full, spe_reduced)),
+  Model = factor(rep(c("Full", "Reduced"), each = length(unlist(spe_full))))
+)
+
+# Generate box plots
+boxplot(SPE ~ Model, data = spe_data, 
+        main = "Squared Prediction Errors: Full vs Reduced Model",
+        ylab = "Squared Prediction Error (MPa²)",
+        col = c("lightblue", "lightgreen"),
+        border = "black")
