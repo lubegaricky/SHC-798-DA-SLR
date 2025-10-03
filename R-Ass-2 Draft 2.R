@@ -273,10 +273,10 @@ mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
 mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
 
 # Report results
-cat("MSPE for Full Model (cement + wcr + age):", mspe_full_mean, "\n")
-cat("MSPE for Reduced Model (cement + age):", mspe_reduced_mean, "\n")
 cat("MSPE per fold for Full Model:", mspe_full, "\n")
 cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+cat("MSPE for Full Model (cement + wcr + age):", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model (cement + age):", mspe_reduced_mean, "\n")
 
 # Optional: Check relative increase in MSPE
 relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100

@@ -248,8 +248,8 @@ str(e.consump) # inspect the dataset and viewing column data types
 # view(e.consump) # views entire dataset
 
 # View variables
-par(mfrow=c(2,2))
-for (i in 1:4) hist(e.consump[,i], main=names(e.consump)[i])
+par(mfrow=c(3,2))
+for (i in 1:6) hist(e.consump[,i], main=names(e.consump)[i])
 par(mfrow = c(1, 1))
 
 
@@ -302,36 +302,115 @@ summary(engy_model3)
 crPlots(engy_model3)
 resplot(engy_model3)
 
-# Part c) Variable Selection
-# Backward Elimination with AIC
-# drop1(conc_model, test="F")
-conc.back <- stats::step(conc_model, direction="backward")
-summary(conc.back)
-resplot(conc.back)
 
-# Forward Selection with AIC
-# add1(conc_null, scope=conc_model, test="F")
-conc_null <- lm(strength ~ 1, data = concrete) # Intercept-only model
-sc <- list(lower=conc_null, upper=conc_model)
-conc.forw <- stats::step(conc_null, scope=sc, direction="forward", k=2)
-summary(conc.forw)
-resplot(conc.forw)
+
+# ===================================================================
+# Part c) Variable Selection starting with the transformed model
+
+# Backward Elimination with AIC
+engy.back <- stats::step(engy_model3, direction="backward")
+summary(engy.back)
+resplot(engy.back)
+
+# # Forward Selection with AIC
+# engy_null <- lm(energy ~ 1, data = e.consump) # Intercept-only model
+# sc <- list(lower=engy_null, upper=engy_model3)
+# engy.forw <- stats::step(engy_null, scope=sc, direction="forward", k=2)
+# summary(engy.forw)
+# resplot(engy.forw)
 
 
 # AIC Stepwise Model Search: Both Directions Approach
 # starting with the null model
-conc.b1 <- stats::step(conc_null, scope = sc, direction = "both")
-summary(conc.b1)
-resplot(conc.b1)
+engy.b1 <- stats::step(engy_null, scope = sc, direction = "both")
+summary(engy.b1)
+resplot(engy.b1)
 
 # starting with the full model
-conc.b2 <- stats::step(conc_model, scope = sc, direction = "both")
-summary(conc.b2)
-resplot(conc.b2)
+engy.b2 <- stats::step(engy_model3, scope = sc, direction = "both")
+summary(engy.b2)
+resplot(engy.b2)
 
 # starting with a model somewhere in the middle
-conc_mid <- lm(strength ~  wcr + age, data = concrete)
-conc.b3 <- stats::step(conc_mid, scope = sc, direction = "both")
-summary(conc.b3)
-resplot(conc.b3)
+engy.mid <- lm(energy ~  climate + glazing, data = e.consump)
+engy.b3<- stats::step(engy.mid, scope = sc, direction = "both")
+summary(engy.b3)
+resplot(engy.b3)
 
+
+# ===================================================================================
+# Part d) 5-fold cross validation
+set.seed(123) # Set seed for reproducibility
+n <- nrow(concrete) # Number of observations and folds
+k <- 5 # Number of folds
+sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+
+# Initialize vectors to store MSPE for each model
+mspe_full <- numeric(k)
+mspe_reduced <- numeric(k)
+
+# 5-fold cross-validation for full model (engy_model3)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  fit_full <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump[train, ])
+  pred_full <- predict(fit_full, newdata = e.consump[test, ])
+  mspe_full[i] <- mean((e.consump$energy[test] - pred_full)^2, na.rm = TRUE)
+}
+
+# 5-fold cross-validation for reduced model (dropping glazing)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split for comparability
+  train <- (1:n)[-test]
+  fit_reduced <- lm(energy ~ log(area) + log(occup) + climate + insulation, data = e.consump[train, ])
+  pred_reduced <- predict(fit_reduced, newdata = e.consump[test, ])
+  mspe_reduced[i] <- mean((e.consump$energy[test] - pred_reduced)^2, na.rm = TRUE)
+}
+
+# Calculate overall MSPE for each model
+mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
+mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
+
+# Report results
+cat("MSPE for Full Model:", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
+cat("MSPE per fold for Full Model:", mspe_full, "\n")
+cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+
+# Optional: Check relative increase in MSPE
+relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
+cat("Relative increase in MSPE (%):", relative_increase, "\n")
+
+
+# Box plots
+# Using MSPEs
+# Combine MSPEs into a data frame for plotting
+mspe_data <- data.frame(
+  MSPE = c(mspe_full, mspe_reduced),
+  Model = factor(rep(c("Full", "Reduced"), each = k))
+)
+
+# Generate box plots
+boxplot(MSPE ~ Model, data = mspe_data, 
+        main = "MSPE Comparison: Full vs Reduced Model",
+        ylab = "Mean Squared Prediction Error",
+        col = c("purple", "lightgreen"),
+        border = "black")
+
+
+# ===============================================================================
+# Using the squared prediction errors
+# Combine squared prediction errors into a data frame
+spe_full <- vector("list", k)
+spe_reduced <- vector("list", k)
+spe_data <- data.frame(
+  SPE = unlist(c(spe_full, spe_reduced)),
+  Model = factor(rep(c("Full", "Reduced"), each = length(unlist(spe_full))))
+)
+
+# Generate box plots
+boxplot(SPE ~ Model, data = spe_data, 
+        main = "Squared Prediction Errors: Full vs Reduced Model",
+        ylab = "Squared Prediction Error (MPa²)",
+        col = c("lightblue", "lightgreen"),
+        border = "black")
