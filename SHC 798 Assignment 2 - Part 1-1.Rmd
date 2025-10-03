@@ -3,9 +3,9 @@ title: "SHC 798 Assignment 2, 2025"
 author: "Richard Lubega"
 date: "`r Sys.Date()`"
 output:
+  html_document: default
   pdf_document:
     latex_engine: xelatex
-  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -297,7 +297,6 @@ mspe_data <- data.frame(
   MSPE = c(mspe_full, mspe_reduced),
   Model = factor(rep(c("Full", "Reduced"), each = k))
 )
-
 # Generating box plots
 boxplot(MSPE ~ Model, data = mspe_data, 
         main = "MSPE Comparison: Full vs Reduced Model",

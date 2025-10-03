@@ -304,6 +304,8 @@ boxplot(MSPE ~ Model, data = mspe_data,
         col = c("lightblue", "lightgreen"),
         border = "black")
 
+
+
 # Using the squared prediction errors
 # Combine squared prediction errors into a data frame
 spe_full <- vector("list", k)
@@ -318,4 +320,71 @@ boxplot(SPE ~ Model, data = spe_data,
         main = "Squared Prediction Errors: Full vs Reduced Model",
         ylab = "Squared Prediction Error (MPa²)",
         col = c("lightblue", "lightgreen"),
+        border = "black")
+
+
+
+# ===============================================================
+# ```{r Part-1-d, cache = FALSE}
+# Part d) 5-fold cross-validation
+set.seed(123) # Set seed for reproducibility
+n <- nrow(e.consump) # Use e.consump for consistency
+k <- 5 # Number of folds
+sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+
+# Initialize vectors to store MSPE for each model
+mspe_full <- numeric(k)
+mspe_reduced <- numeric(k)
+
+# 5-fold cross-validation for full model
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  if (sum(complete.cases(e.consump[train, ])) == 0) {
+    warning(paste("Fold", i, "has no valid cases"))
+    mspe_full[i] <- NA
+  } else {
+    fit_full <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump[train, ])
+    pred_full <- predict(fit_full, newdata = e.consump[test, ])
+    mspe_full[i] <- mean((e.consump$energy[test] - pred_full)^2, na.rm = TRUE)
+  }
+}
+
+# 5-fold cross-validation for reduced model
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  if (sum(complete.cases(e.consump[train, ])) == 0) {
+    warning(paste("Fold", i, "has no valid cases"))
+    mspe_reduced[i] <- NA
+  } else {
+    fit_reduced <- lm(energy ~ log(area) + log(occup) + climate + insulation, data = e.consump[train, ])
+    pred_reduced <- predict(fit_reduced, newdata = e.consump[test, ])
+    mspe_reduced[i] <- mean((e.consump$energy[test] - pred_reduced)^2, na.rm = TRUE)
+  }
+}
+
+# Calculate overall MSPE for each model
+mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
+mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
+
+# Report results
+cat("MSPE per fold for Full Model:", mspe_full, "\n")
+cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+cat("MSPE for Full Model:", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
+
+# Checking relative increase in MSPE
+relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
+cat("Relative increase in MSPE (%):", relative_increase, "\n")
+
+# Box plots
+mspe_data <- data.frame(
+  MSPE = c(mspe_full, mspe_reduced),
+  Model = factor(rep(c("Full", "Reduced"), each = k))
+)
+boxplot(MSPE ~ Model, data = mspe_data, 
+        main = "MSPE Comparison: Full vs Reduced Model",
+        ylab = "Mean Squared Prediction Error",
+        col = c("purple", "lightgreen"),
         border = "black")

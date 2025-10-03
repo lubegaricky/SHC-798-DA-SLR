@@ -313,8 +313,8 @@ summary(engy.back)
 resplot(engy.back)
 
 # # Forward Selection with AIC
-# engy_null <- lm(energy ~ 1, data = e.consump) # Intercept-only model
-# sc <- list(lower=engy_null, upper=engy_model3)
+engy_null <- lm(energy ~ 1, data = e.consump) # Intercept-only model
+sc <- list(lower=engy_null, upper=engy_model3)
 # engy.forw <- stats::step(engy_null, scope=sc, direction="forward", k=2)
 # summary(engy.forw)
 # resplot(engy.forw)
@@ -341,7 +341,7 @@ resplot(engy.b3)
 # ===================================================================================
 # Part d) 5-fold cross validation
 set.seed(123) # Set seed for reproducibility
-n <- nrow(concrete) # Number of observations and folds
+n <- nrow(e.consump) # Number of observations and folds
 k <- 5 # Number of folds
 sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
 
@@ -372,10 +372,11 @@ mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
 mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
 
 # Report results
-cat("MSPE for Full Model:", mspe_full_mean, "\n")
-cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
 cat("MSPE per fold for Full Model:", mspe_full, "\n")
 cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+cat("MSPE for Full Model:", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
+
 
 # Optional: Check relative increase in MSPE
 relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
@@ -414,3 +415,7 @@ boxplot(SPE ~ Model, data = spe_data,
         ylab = "Squared Prediction Error (MPa²)",
         col = c("lightblue", "lightgreen"),
         border = "black")
+
+# =================================================================
+
+# My code chunk
