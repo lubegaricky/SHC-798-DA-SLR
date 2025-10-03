@@ -329,19 +329,105 @@ plot(conc_model, which = 4)
 plot(conc_model, which = 5)
 resplot(conc_model, plots = 4)
 
-# Part b): Variable Selection
-# Backward Elimination
-summary(conc_model)
-drop1(conc_model, test="F")
+
+# Part d): Variable Selection
+# Backward Elimination with AIC
+# drop1(conc_model, test="F")
+conc.back <- stats::step(conc_model, direction="backward")
+summary(conc.back)
+resplot(conc.back)
+
+# Forward Selection with AIC
+# add1(conc_null, scope=conc_model, test="F")
+conc_null <- lm(strength ~ 1, data = concrete) # Intercept-only model
+sc <- list(lower=conc_null, upper=conc_model)
+conc.forw <- stats::step(conc_null, scope=sc, direction="forward", k=2)
+summary(conc.forw)
+resplot(conc.forw)
 
 
-# Forward Selection
+# AIC Stepwise Model Search: Both Directions Approach
+# starting with the null model
+conc.b1 <- stats::step(conc_null, scope = sc, direction = "both")
+summary(conc.b1)
+resplot(conc.b1)
+
+# starting with the full model
+conc.b2 <- stats::step(conc_model, scope = sc, direction = "both")
+summary(conc.b2)
+resplot(conc.b2)
+
+# starting with a model somewhere in the middle
+conc_mid <- lm(strength ~  wcr + age, data = concrete)
+conc.b3 <- stats::step(conc_mid, scope = sc, direction = "both")
+summary(conc.b3)
+resplot(conc.b3)
+
+# AIC is used when the principal aim is the prediction
 
 
-# AIC Stepwise
+
+
+# Part e) 5-fold cross validation
+# Set seed for reproducibility
+set.seed(123)  # Ensures consistent fold assignment
+
+n <- nrow(concrete) # Number of observations
+k <- 5 # Number of folds
+fold_size <- n %/% k  # Approximately 10 or 11 per fold (54 / 5 = 10.8)
+sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+
+mspe_folds <- numeric(k) # Initialize vector to store MSPE for each fold
+
+# 5-fold cross-validation loop 
+for (i in 1:k) {
+  # Define test set indices for the current fold
+   test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  # Define training set indices (all except test set)
+   train <- (1:n)[-test]  
+  # Fit linear model on training data 
+   fit <- lm(strength ~ cement + wcr + age, data = concrete[train, ]) 
+  # Predict on test data
+   pred <- predict(fit, newdata = concrete[test, ])
+  # Calculate squared prediction errors for this fold
+   spe <- (concrete$strength[test] - pred)^2
+  # Store MSPE for this fold
+   mspe_folds[i] <- mean(spe, na.rm = TRUE)  # na.rm handles NA from outliers
+}
+
+# Organize SPE into a data frame with 5 columns (one per fold)
+n_per_fold <- length(spe) / k  # Number of observations per fold (approx. 10-11)
+spe_df <- data.frame(
+  spe1 = spe[1:n_per_fold],
+  spe2 = spe[(n_per_fold + 1):(2 * n_per_fold)],
+  spe3 = spe[(2 * n_per_fold + 1):(3 * n_per_fold)],
+  spe4 = spe[(3 * n_per_fold + 1):(4 * n_per_fold)],
+  spe5 = spe[(4 * n_per_fold + 1):length(spe)]
+)
+
+# Calculate mean SPE for each fold (MSPE per fold)
+mspe_per_fold <- apply(spe_df, 2, mean, na.rm = TRUE)
+
+# Calculate overall MSPE
+mspe <- mean(mspe_folds, na.rm = TRUE)
+
+# Report results
+cat("Mean Squared Prediction Error (MSPE) from 5-fold cross-validation:", mspe, "\n")
+cat("MSPE for each fold:", mspe_folds, "\n")
+cat("Mean SPE per fold from data frame:", mspe_per_fold, "\n")
+
+# Optional: Flag the negative strength value for review
+if (any(concrete$strength < 0)) {
+  cat("Warning: Negative strength value (-0.7) detected, consider removing or correcting this outlier.\n")
+}
+
+# Optional: Display the full model for reference
+summary(lm(strength ~ cement + wcr + age, data = concrete))
 
 
 
+
+boxplot(spe)
 
 # Part f): Prediction
 conc.str <- data.frame(cement=350, wcr=0.5, age=28)

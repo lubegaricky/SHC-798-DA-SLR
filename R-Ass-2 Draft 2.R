@@ -168,7 +168,7 @@ plotcorr(cor_matrix, col = "blue", main = "Correlation Ellipse Plot")
 concrete2 <- concrete
 concrete2$age <- as.character(concrete2$age)
 str(concrete2)
-conc_f <- lm(strength ~ cement + wcr + age, data = concrete2)
+# conc_f <- lm(strength ~ cement + wcr + age, data = concrete2)
 conc_f
 summary(conc_f)
 
@@ -187,7 +187,103 @@ plotcorr(cor(concrete2))
 
 # (iii) Variance Inflation Factors (VIFs)
 pacman::p_load(car)
-conc_f <- lm(strength ~ cement + wcr + age, data = concrete2)
+conc_f <- lm(strength ~ cement + wcr + age + cement:age, data = concrete2)
+summary(conc_f)
 vif(conc_f)
 
+## Residual analysis
+plot(conc_f, which=1)
+resplot(conc_f, plots = 1)
+
+plot(conc_f, which = 2)
+resplot(conc_f, plots = 2)
+
+## Scale-location plot
+plot(conc_f, which = 3)
+resplot(conc_f, plots = 3)
+
+## Cook's Distance plot
+plot(conc_f, which = 4)
+plot(conc_f, which = 5)
+resplot(conc_f, plots = 4)
+
+# Part b): Variable Selection
+# Backward Elimination
+summary(conc_f)
+drop1(conc_f, test="F")
+
+
+# Part e) 5-fold cross validation
+
+# Generic code
+# spe <- c()
+# folds <- 5
+# sb <- round(seq(0,nrow(dat),length=(folds+1)))
+# for (i in 1:folds)
+# {
+#   test <- (sb[((folds+1)-i)]+1):(sb[((folds+2)-i)])
+#   train <- (1:nrow(dat))[-test]
+#   fit <- lm(res ~ p1+..., data=dat[train,])
+#   pred <- predict(fit, newdata=dat[test,])
+#   spe <- c(spe,(dat$response[test]- pred)^2)
+# }
+# 
+# spe <- data.frame(spe1, spe2, spe3)
+# apply(spe,2,mean)
+
+
+
+
+# ======================================
+# Set seed for reproducibility
+set.seed(123)
+
+# Load data (assuming concrete is already defined)
+# If not, uncomment and adjust: concrete <- read.csv("concrete.csv")
+
+# Number of observations and folds
+n <- nrow(concrete)
+k <- 5
+sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+
+# Initialize vectors to store MSPE for each model
+mspe_full <- numeric(k)
+mspe_reduced <- numeric(k)
+
+# 5-fold cross-validation for full model (strength ~ cement + wcr + age)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  fit_full <- lm(strength ~ cement + wcr + age, data = concrete[train, ])
+  pred_full <- predict(fit_full, newdata = concrete[test, ])
+  mspe_full[i] <- mean((concrete$strength[test] - pred_full)^2, na.rm = TRUE)
+}
+
+# 5-fold cross-validation for reduced model (strength ~ cement + age, dropping wcr)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split for fairness
+  train <- (1:n)[-test]
+  fit_reduced <- lm(strength ~ cement + age, data = concrete[train, ])
+  pred_reduced <- predict(fit_reduced, newdata = concrete[test, ])
+  mspe_reduced[i] <- mean((concrete$strength[test] - pred_reduced)^2, na.rm = TRUE)
+}
+
+# Calculate overall MSPE for each model
+mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
+mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
+
+# Report results
+cat("MSPE for Full Model (cement + wcr + age):", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model (cement + age):", mspe_reduced_mean, "\n")
+cat("MSPE per fold for Full Model:", mspe_full, "\n")
+cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+
+# Optional: Check relative increase in MSPE
+relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
+cat("Relative increase in MSPE (%):", relative_increase, "\n")
+
+# Optional: Flag negative strength value
+if (any(concrete$strength < 0)) {
+  cat("Warning: Negative strength value (-0.7) detected, consider removing or correcting this outlier.\n")
+}
 
