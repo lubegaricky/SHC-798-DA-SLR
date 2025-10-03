@@ -103,6 +103,8 @@ confint(conc_model)["(Intercept)", ]
 # -Appropriateness of fit
 
 ## Residual analysis
+resplot(conc_model)
+
 plot(conc_model, which=1)
 resplot(conc_model, plots = 1)
 
