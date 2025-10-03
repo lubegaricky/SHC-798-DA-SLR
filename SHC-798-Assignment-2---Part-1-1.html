@@ -836,7 +836,6 @@ mspe_data &lt;- data.frame(
   MSPE = c(mspe_full, mspe_reduced),
   Model = factor(rep(c(&quot;Full&quot;, &quot;Reduced&quot;), each = k))
 )
-
 # Generating box plots
 boxplot(MSPE ~ Model, data = mspe_data, 
         main = &quot;MSPE Comparison: Full vs Reduced Model&quot;,

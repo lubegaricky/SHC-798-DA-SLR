@@ -297,6 +297,8 @@ resplot(engy_model, plots = 4)
 
 resplot(engy_model)
 
+par(mfrow = c(1, 1))
+
 # Linearity of each predictor - Use of Partial Residual Plots
 pacman::p_load(car)
 crPlots(engy_model)
