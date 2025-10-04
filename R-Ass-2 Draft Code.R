@@ -164,66 +164,125 @@ resplot(conc.b3)
 
 
 
-# Part e) 5-fold cross validation
-# Set seed for reproducibility
-set.seed(123)  # Ensures consistent fold assignment
+#=========================== Part e) 5-fold cross validation=======================
+# # Set seed for reproducibility
+# set.seed(123)  # Ensures consistent fold assignment
+# 
+# n <- nrow(concrete) # Number of observations
+# k <- 5 # Number of folds
+# fold_size <- n %/% k  # Approximately 10 or 11 per fold (54 / 5 = 10.8)
+# sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+# 
+# mspe_folds <- numeric(k) # Initialize vector to store MSPE for each fold
+# 
+# # 5-fold cross-validation loop 
+# for (i in 1:k) {
+#   # Define test set indices for the current fold
+#    test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+#   # Define training set indices (all except test set)
+#    train <- (1:n)[-test]  
+#   # Fit linear model on training data 
+#    fit <- lm(strength ~ cement + wcr + age, data = concrete[train, ]) 
+#   # Predict on test data
+#    pred <- predict(fit, newdata = concrete[test, ])
+#   # Calculate squared prediction errors for this fold
+#    spe <- (concrete$strength[test] - pred)^2
+#   # Store MSPE for this fold
+#    mspe_folds[i] <- mean(spe, na.rm = TRUE)  # na.rm handles NA from outliers
+# }
+# 
+# # Organize SPE into a data frame with 5 columns (one per fold)
+# n_per_fold <- length(spe) / k  # Number of observations per fold (approx. 10-11)
+# spe_df <- data.frame(
+#   spe1 = spe[1:n_per_fold],
+#   spe2 = spe[(n_per_fold + 1):(2 * n_per_fold)],
+#   spe3 = spe[(2 * n_per_fold + 1):(3 * n_per_fold)],
+#   spe4 = spe[(3 * n_per_fold + 1):(4 * n_per_fold)],
+#   spe5 = spe[(4 * n_per_fold + 1):length(spe)]
+# )
+# 
+# # Calculate mean SPE for each fold (MSPE per fold)
+# mspe_per_fold <- apply(spe_df, 2, mean, na.rm = TRUE)
+# 
+# # Calculate overall MSPE
+# mspe <- mean(mspe_folds, na.rm = TRUE)
+# 
+# # Report results
+# cat("Mean Squared Prediction Error (MSPE) from 5-fold cross-validation:", mspe, "\n")
+# cat("MSPE for each fold:", mspe_folds, "\n")
+# cat("Mean SPE per fold from data frame:", mspe_per_fold, "\n")
+# 
+# # Optional: Flag the negative strength value for review
+# if (any(concrete$strength < 0)) {
+#   cat("Warning: Negative strength value (-0.7) detected, consider removing or correcting this outlier.\n")
+# }
+# 
+# # Optional: Display the full model for reference
+# summary(lm(strength ~ cement + wcr + age, data = concrete))
+# 
+# boxplot(spe)
+
+# =======================================================
+  # Part e) 5-fold cross validation
+# Full Model is (strength ~ cement + wcr + age)
+# Reduced Model is (strength ~ cement + age); wcr is dropped to see effect on prediction performance
+
+set.seed(123) # Set seed for reproducibility
 
 n <- nrow(concrete) # Number of observations
 k <- 5 # Number of folds
-fold_size <- n %/% k  # Approximately 10 or 11 per fold (54 / 5 = 10.8)
 sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
 
-mspe_folds <- numeric(k) # Initialize vector to store MSPE for each fold
+# Initialize vectors to store MSPE for each model
+mspe_full <- numeric(k)
+mspe_reduced <- numeric(k)
 
-# 5-fold cross-validation loop 
+# 5-fold cross-validation for full model (strength ~ cement + wcr + age)
 for (i in 1:k) {
-  # Define test set indices for the current fold
-   test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
-  # Define training set indices (all except test set)
-   train <- (1:n)[-test]  
-  # Fit linear model on training data 
-   fit <- lm(strength ~ cement + wcr + age, data = concrete[train, ]) 
-  # Predict on test data
-   pred <- predict(fit, newdata = concrete[test, ])
-  # Calculate squared prediction errors for this fold
-   spe <- (concrete$strength[test] - pred)^2
-  # Store MSPE for this fold
-   mspe_folds[i] <- mean(spe, na.rm = TRUE)  # na.rm handles NA from outliers
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  fit_full <- lm(strength ~ cement + wcr + age, data = concrete[train, ])
+  pred_full <- predict(fit_full, newdata = concrete[test, ])
+  mspe_full[i] <- mean((concrete$strength[test] - pred_full)^2, na.rm = TRUE)
 }
 
-# Organize SPE into a data frame with 5 columns (one per fold)
-n_per_fold <- length(spe) / k  # Number of observations per fold (approx. 10-11)
-spe_df <- data.frame(
-  spe1 = spe[1:n_per_fold],
-  spe2 = spe[(n_per_fold + 1):(2 * n_per_fold)],
-  spe3 = spe[(2 * n_per_fold + 1):(3 * n_per_fold)],
-  spe4 = spe[(3 * n_per_fold + 1):(4 * n_per_fold)],
-  spe5 = spe[(4 * n_per_fold + 1):length(spe)]
-)
+# 5-fold cross-validation for reduced model (strength ~ cement + age)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split comparability
+  train <- (1:n)[-test]
+  fit_reduced <- lm(strength ~ cement + age, data = concrete[train, ])
+  pred_reduced <- predict(fit_reduced, newdata = concrete[test, ])
+  mspe_reduced[i] <- mean((concrete$strength[test] - pred_reduced)^2, na.rm = TRUE)
+}
 
-# Calculate mean SPE for each fold (MSPE per fold)
-mspe_per_fold <- apply(spe_df, 2, mean, na.rm = TRUE)
-
-# Calculate overall MSPE
-mspe <- mean(mspe_folds, na.rm = TRUE)
+# Calculating overall MSPE for each model
+mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
+mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
 
 # Report results
-cat("Mean Squared Prediction Error (MSPE) from 5-fold cross-validation:", mspe, "\n")
-cat("MSPE for each fold:", mspe_folds, "\n")
-cat("Mean SPE per fold from data frame:", mspe_per_fold, "\n")
+cat("MSPE per fold for Full Model:", mspe_full, "\n")
+cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+cat("MSPE for Full Model:", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
 
-# Optional: Flag the negative strength value for review
-if (any(concrete$strength < 0)) {
-  cat("Warning: Negative strength value (-0.7) detected, consider removing or correcting this outlier.\n")
-}
+# Relative increase in MSPE
+relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
+cat("Relative increase in MSPE (%):", relative_increase, "\n")
 
-# Optional: Display the full model for reference
-summary(lm(strength ~ cement + wcr + age, data = concrete))
+# Box plots using MSPEs
+# Combining MSPEs into a data frame for plotting
+mspe_data <- data.frame(
+  MSPE = c(mspe_full, mspe_reduced),
+  Model = factor(rep(c("Full", "Reduced"), each = k))
+)
+# Generating box plots
+boxplot(MSPE ~ Model, data = mspe_data, 
+        main = "MSPE Comparison: Full vs Reduced Model",
+        ylab = "Mean Squared Prediction Error (MPa²)",
+        col = c("lightblue", "lightgreen"),
+        border = "black")
 
 
-
-
-boxplot(spe)
 
 # Part f): Prediction
 conc.str <- data.frame(cement=350, wcr=0.5, age=28)
@@ -472,4 +531,68 @@ boxplot(SPE ~ Model, data = spe_data,
 
 # =================================================================
 
-# My code chunk
+
+
+#======================= My code chunk============
+
+# Part d) 5-fold cross validation
+set.seed(123) # Set seed for reproducibility
+n <- nrow(e.consump) # Number of observations and folds
+k <- 5 # Number of folds
+sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+
+# Initialize vectors to store MSPE for each model
+mspe_full <- numeric(k)
+mspe_reduced <- numeric(k)
+
+# 5-fold cross-validation for full model (engy_model3)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  fit_full <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump[train, ])
+  pred_full <- predict(fit_full, newdata = e.consump[test, ])
+  mspe_full[i] <- mean((e.consump$energy[test] - pred_full)^2, na.rm = FALSE)
+}
+
+# 5-fold cross-validation for reduced model (dropping glazing)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split for comparability
+  train <- (1:n)[-test]
+  fit_reduced <- lm(energy ~ log(area) + log(occup) + climate + insulation, data = e.consump[train, ])
+  pred_reduced <- predict(fit_reduced, newdata = e.consump[test, ])
+  mspe_reduced[i] <- mean((e.consump$energy[test] - pred_reduced)^2, na.rm = FALSE)
+}
+
+# Calculate overall MSPE for each model
+mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
+mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
+
+# Report results
+cat("MSPE per fold for Full Model:", mspe_full, "\n")
+cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+cat("MSPE for Full Model:", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
+
+# Checking relative increase in MSPE
+relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
+cat("Relative increase in MSPE (%):", relative_increase, "\n")
+
+# Box plots Using MSPEs
+# Combining MSPEs into a data frame for plotting
+mspe_data <- data.frame(
+  MSPE = c(mspe_full, mspe_reduced),
+  Model = factor(rep(c("Full", "Reduced"), each = k))
+)
+# Generating box plots
+boxplot(MSPE ~ Model, data = mspe_data, 
+        main = "MSPE Comparison: Full vs Reduced Model",
+        ylab = "Mean Squared Prediction Error",
+        col = c("purple", "lightgreen"),
+        border = "black")
+
+# ```
+
+# From the cross-validation exercise, The MSPE for the reduced model is less (-1.275735%) than the full model.
+# Therefore, the variable glazing can be said to reduce the predictive power in model.
+# Therefore, the reduced model is preferable for prediction purposes.
+
