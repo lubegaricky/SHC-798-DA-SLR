@@ -164,13 +164,28 @@ plotcorr(cor_matrix, col = "blue", main = "Correlation Ellipse Plot")
 # ===============================================================================================
 # ==================================================================================================
 
+
+
+# ****************************************************************
 # Model with Age as a Factor variable
+concrete
 concrete2 <- concrete
-concrete2$age <- as.character(concrete2$age)
+concrete2$age <- as.character(concrete2$age) # character
 str(concrete2)
-# conc_f <- lm(strength ~ cement + wcr + age, data = concrete2)
-conc_f
-summary(conc_f)
+conc_f2 <- lm(strength ~ cement + wcr + age, data = concrete2)
+summary(conc_f2)
+
+
+str(concrete2$age)
+model.matrix(~ age, data = concrete2)[1:6, ]
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+concrete3 <- concrete
+concrete3$age <- as.factor(concrete3$age) # factor
+str(concrete3)
+conc_f3 <- lm(strength ~ cement + wcr + age, data = concrete2)
+summary(conc_f3)
+
 
 # (i) Pearson correlation coefficients
 cor(concrete2, method = "pearson")
@@ -388,4 +403,44 @@ boxplot(MSPE ~ Model, data = mspe_data,
         ylab = "Mean Squared Prediction Error",
         col = c("purple", "lightgreen"),
         border = "black")
+
+
+
+
+ 
+# ============================================================================
+ 
+# *********************************************************************
+   
+# =======================================================================
+
+# ANOVA
+
+# Load ggplot2 for better visualization
+# library(ggplot2)
+
+# Create boxplot
+ggplot(timber, aes(x = species, y = stiffness, fill = species)) +
+  geom_boxplot() +
+  labs(title = "Bending Stiffness by Timber Species",
+       x = "Timber Species",
+       y = "Bending Stiffness (kN·m²)") +
+  theme_minimal()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
