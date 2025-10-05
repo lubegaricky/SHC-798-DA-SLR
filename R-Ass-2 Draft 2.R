@@ -428,6 +428,449 @@ ggplot(timber, aes(x = species, y = stiffness, fill = species)) +
   theme_minimal()
 
 
+# Outliers
+# Load dplyr for data manipulation
+# library(dplyr)
+
+# Summary statistics by species
+summary_stats <- timber %>%
+  group_by(species) %>%
+  summarise(
+    Mean = mean(stiffness),
+    SD = sd(stiffness),
+    Median = median(stiffness),
+    IQR = IQR(stiffness),
+    Q1 = quantile(stiffness, 0.25),
+    Q3 = quantile(stiffness, 0.75),
+    Min = min(stiffness),
+    Max = max(stiffness)
+  )
+
+# Identify outliers using IQR method
+outliers <- timber %>%
+  group_by(species) %>%
+  mutate(
+    Q1 = quantile(stiffness, 0.25),
+    Q3 = quantile(stiffness, 0.75),
+    IQR = Q3 - Q1,
+    Lower_Bound = Q1 - 1.5 * IQR,
+    Upper_Bound = Q3 + 1.5 * IQR,
+    Outlier = stiffness < Lower_Bound | stiffness > Upper_Bound
+  ) %>%
+  filter(Outlier) %>%
+  select(species, stiffness)
+
+# Print summary statistics and outliers
+print("Summary Statistics:")
+print(summary_stats)
+print("Outliers:")
+print(outliers)
+
+
+# ========================
+# Ensure species is a factor
+# timber$species <- as.factor(timber$species)
+
+# Create boxplot and store stats
+bp <- boxplot(stiffness ~ species,
+              data = timber,
+              main = "Bending Stiffness by Timber Species",
+              xlab = "Timber Species",
+              ylab = "Bending Stiffness (kN·m²)",
+              col = c("lightblue", "lightgreen", "lightpink"),
+              border = "black",
+              outline = TRUE)  # ensures outliers are shown
+
+# bp$out contains all outlier values
+# bp$group tells which species each outlier belongs to
+# bp$names gives the species names in order
+
+# Annotate outliers on the plot
+text(x = bp$group, y = bp$out, labels = bp$out, pos = 3, cex = 0.7, col = "red")
+
+
+# Outliers
+
+# Create boxplot without default outliers
+bp <- boxplot(stiffness ~ species,
+              data = timber,
+              main = "Bending Stiffness by Timber Species",
+              xlab = "Timber Species",
+              ylab = "Bending Stiffness (kN·m²)",
+              col = c("lightblue", "lightgreen", "lightpink"),
+              border = "black",
+              outline = FALSE)  # hide default outliers
+
+# Compute and plot species means
+means <- tapply(timber$stiffness, timber$species, mean)
+points(1:length(means), means, col = "blue", pch = 19, cex = 1.2)
+
+# Annotate extremes (min and max) for each species
+species_levels <- levels(timber$species)
+
+for (i in seq_along(species_levels)) {
+  sp <- species_levels[i]
+  sp_data <- timber$stiffness[timber$species == sp]
+  
+  min_val <- min(sp_data)
+  max_val <- max(sp_data)
+  
+  # Plot extremes as red dots
+  points(i, min_val, col = "red", pch = 19)
+  points(i, max_val, col = "red", pch = 19)
+  
+  # Label extremes
+  text(i, min_val, labels = round(min_val,1), pos = 3, col = "red", cex = 0.7)
+  text(i, max_val, labels = round(max_val,1), pos = 3, col = "red", cex = 0.7)
+}
+
+# Add legend
+legend("topright", legend = c("Mean", "Min/Max"),
+       col = c("blue", "red"), pch = 19, bty = "n")
+
+
+# ============================================================
+# GroK
+
+# Verify data structure
+cat("Data structure of timber:\n")
+str(timber)
+cat("First few rows of timber:\n")
+print(head(timber))
+
+# Set y-axis range to include all outliers
+y_min <- 6500  # Below 6999.2
+y_max <- 11500  # Above 11124.5
+cat("Y-axis range: ", y_min, " to ", y_max, "\n")
+
+# Set up the plot with base graphics
+par(mar = c(5, 5, 4, 2))  # Adjust margins
+
+# Create boxplot without default outliers
+bp <- boxplot(stiffness ~ species, 
+              data = timber, 
+              col = c("lightblue", "lightgreen", "lightpink"),  # Colors for pine, gum, cedar
+              border = "black",  # Black border
+              xlab = "Timber Species",
+              ylab = "Bending Stiffness (kN·m²)",
+              main = "Bending Stiffness by Timber Species",
+              outline = FALSE,  # Suppress default outliers
+              las = 1,  # Horizontal y-axis labels
+              ylim = c(y_min, y_max))  # Ensure y-axis includes outliers
+
+# Debug: Print species order and boxplot stats
+cat("Species order in boxplot:", levels(as.factor(timber$species)), "\n")
+cat("Boxplot stats (min, Q1, median, Q3, max):\n")
+print(bp$stats)
+
+# Test graphics: Plot a blue point to confirm plotting works
+cat("Testing graphics: Plotting blue point at (1, 7000)\n")
+points(1, 7000, pch = 19, col = "blue", cex = 1.5)
+
+# Hardcode known outliers (from prior analysis)
+cat("Plotting hardcoded outliers:\n")
+# Pine: outlier at 6999.2 (x=1)
+points(1, 6999.2, pch = 19, col = "red", cex = 1.5)
+text(1, 6999.2, labels = "6999.2", pos = 3, offset = 1.0, col = "black", cex = 1.0)
+cat("  Pine: 6999.2 at x=1\n")
+# Gum: outliers at 8314.9 and 11124.5 (x=2)
+points(c(2, 2), c(8314.9, 11124.5), pch = 19, col = "red", cex = 1.5)
+text(c(2, 2), c(8314.9, 11124.5), labels = c("8314.9", "11124.5"), 
+     pos = 3, offset = 1.0, col = "black", cex = 1.0)
+cat("  Gum: 8314.9, 11124.5 at x=2\n")
+# Cedar: no outliers
+cat("  Cedar: No outliers at x=3\n")
+
+# **************************************
+# GPT
+# Ensure species is a factor
+# timber$species <- as.factor(timber$species)
+
+# Draw boxplots without default outliers
+boxplot(stiffness ~ species,
+        data = timber,
+        col = c("lightblue", "lightgreen", "lightpink"),
+        border = "black",
+        main = "Bending Stiffness by Timber Species",
+        xlab = "Timber Species",
+        ylab = "Bending Stiffness (kN·m²)",
+        outline = FALSE)
+
+species_levels <- levels(timber$species)
+
+# Plot and label min and max values for each species
+for (i in seq_along(species_levels)) {
+  sp <- species_levels[i]
+  sp_data <- timber$stiffness[timber$species == sp]
+  
+  min_val <- min(sp_data)
+  max_val <- max(sp_data)
+  
+  points(i, min_val, col = "red", pch = 19)
+  points(i, max_val, col = "red", pch = 19)
+  
+  text(i, min_val, labels = round(min_val,1), pos = 3, col = "red", cex = 0.7)
+  text(i, max_val, labels = round(max_val,1), pos = 3, col = "red", cex = 0.7)
+}
+
+
+
+# ===========================
+# Violin Plots
+# Install and load vioplot package if not already installed
+# if (!require(vioplot)) install.packages("vioplot")
+pacman::p_load(vioplot)
+
+# Verify data structure
+cat("Data structure of timber:\n")
+str(timber)
+cat("First few rows of timber:\n")
+print(head(timber))
+
+# Set y-axis range to include all outliers
+y_min <- 6500  # Below 6999.2
+y_max <- 11500  # Above 11124.5
+cat("Y-axis range: ", y_min, " to ", y_max, "\n")
+
+# Set up the plot with base graphics
+par(mar = c(5, 5, 4, 2))  # Adjust margins
+
+# Create violin plots
+vioplot(timber$stiffness[timber$species == "pine"],
+        timber$stiffness[timber$species == "gum"],
+        timber$stiffness[timber$species == "cedar"],
+        names = c("pine", "gum", "cedar"),
+        col = c("lightblue", "lightgreen", "lightpink"),  # Fill colors
+        border = "black",  # Black border
+        xlab = "Timber Species",
+        ylab = "Bending Stiffness (kN·m²)",
+        main = "Bending Stiffness by Timber Species",
+        las = 1,  # Horizontal y-axis labels
+        ylim = c(y_min, y_max))  # Ensure y-axis includes outliers
+
+# Debug: Print species order
+cat("Species order in violin plot: pine, gum, cedar\n")
+
+# Test graphics: Plot a blue point to confirm plotting works
+cat("Testing graphics: Plotting blue point at (1, 7000)\n")
+points(1, 7000, pch = 19, col = "blue", cex = 1.5)
+
+# Hardcode known outliers (from prior analysis)
+cat("Plotting hardcoded outliers:\n")
+# Pine: outlier at 6999.2 (x=1)
+points(1, 6999.2, pch = 19, col = "red", cex = 1.5)
+text(1, 6999.2, labels = "6999.2", pos = 3, offset = 1.0, col = "black", cex = 1.0)
+cat("  Pine: 6999.2 at x=1\n")
+# Gum: outliers at 8314.9 and 11124.5 (x=2)
+points(c(2, 2), c(8314.9, 11124.5), pch = 19, col = "red", cex = 1.5)
+text(c(2, 2), c(8314.9, 11124.5), labels = c("8314.9", "11124.5"), 
+     pos = 3, offset = 1.0, col = "black", cex = 1.0)
+cat("  Gum: 8314.9, 11124.5 at x=2\n")
+# Cedar: no outliers
+cat("  Cedar: No outliers at x=3\n")
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++=
+# Set up the plot with base graphics
+par(mfrow = c(3, 1), mar = c(4, 4, 2, 2))  # 3 rows, adjust margins
+
+# Define colors
+colors <- c("lightblue", "lightgreen", "lightpink")
+
+# Create histograms for each species
+for (i in seq_along(unique(timber$species))) {
+  species <- unique(timber$species)[i]
+  data <- timber$stiffness[timber$species == species]
+  
+  # Histogram
+  hist(data, breaks = seq(6500, 11500, by = 500), 
+       col = colors[i], border = "black", 
+       main = paste("Histogram of", species), 
+       xlab = "Bending Stiffness (kN·m²)", ylab = "Frequency", 
+       xlim = c(6500, 11500))
+  
+  # Add density curve
+  lines(density(data), col = "black", lwd = 2)
+}
+
+
+# ============
+# Set up a 3x1 plotting area for histograms with overlaid density plots
+par(mfrow = c(3, 1), mar = c(4, 4, 2, 2))
+
+# Histograms with overlaid marginal density distributions
+# Histogram and density for pine
+hist(timber$stiffness[timber$species == "pine"], 
+     main = "Histogram of Pine Stiffness with Density", 
+     xlab = "Bending Stiffness (kN·m²)", 
+     col = "lightblue", border = "black", 
+     probability = TRUE, breaks = seq(6500, 11500, by = 500), 
+     xlim = c(6500, 11500))
+lines(density(timber$stiffness[timber$species == "pine"]), col = "red", lwd = 2)
+
+# Histogram and density for gum
+hist(timber$stiffness[timber$species == "gum"], 
+     main = "Histogram of Gum Stiffness with Density", 
+     xlab = "Bending Stiffness (kN·m²)", 
+     col = "lightgreen", border = "black", 
+     probability = TRUE, breaks = seq(6500, 11500, by = 500), 
+     xlim = c(6500, 11500))
+lines(density(timber$stiffness[timber$species == "gum"]), col = "red", lwd = 2)
+
+# Histogram and density for cedar
+hist(timber$stiffness[timber$species == "cedar"], 
+     main = "Histogram of Cedar Stiffness with Density", 
+     xlab = "Bending Stiffness (kN·m²)", 
+     col = "lightpink", border = "black", 
+     probability = TRUE, breaks = seq(6500, 11500, by = 500), 
+     xlim = c(6500, 11500))
+lines(density(timber$stiffness[timber$species == "cedar"]), col = "red", lwd = 2)
+
+# Reset plotting parameters
+par(mfrow = c(1, 1))
+
+# Summary statistics for stiffness by species
+summary(timber$stiffness[timber$species == "pine"])
+summary(timber$stiffness[timber$species == "gum"])
+summary(timber$stiffness[timber$species == "cedar"])
+
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
+
+# Assuming your data frame is called timber
+# Set colors for each species
+colors <- c("lightblue", "lightgreen", "lightpink")
+
+# Create the boxplot
+boxplot(stiffness ~ species, data = timber,
+        col = colors,
+        border = "black",
+        main = "Timber Bending Stiffness by Species",
+        xlab = "Species",
+        ylab = "Stiffness (kN·m^2)")
+
+
+
+# Colors for each species
+colors <- c("lightblue", "lightgreen", "lightpink")
+
+# Create the boxplot and store statistics
+bp <- boxplot(stiffness ~ species, data = timber,
+              col = colors,
+              border = "black",
+              main = "Timber Bending Stiffness by Species",
+              xlab = "Species",
+              ylab = "Stiffness (kN·m^2)",
+              outline = TRUE)  # show outliers
+
+# Loop over each species to label outliers
+species_levels <- levels(factor(timber$species))  # ensure correct order
+
+for (i in 1:length(species_levels)) {
+  # Identify outliers for this species
+  outliers <- timber$stiffness[timber$species == species_levels[i]]
+  q <- boxplot.stats(outliers)$out
+  
+  # Label each outlier
+  text(rep(i, length(q)), q, labels = round(q,1), pos = 3, cex = 0.7)
+}
+
+# ================================================================
+# 3x1 plotting area
+par(mfrow = c(3, 1), mar = c(4, 4, 2, 2))
+
+# Histograms with density
+hist(timber$stiffness[timber$species == "pine"], 
+     main = "Pine Stiffness", xlab = "Bending Stiffness (kN·m²)", 
+     col = "lightblue", border = "black", probability = TRUE, 
+     breaks = seq(6500, 11500, 500), xlim = c(6500, 11500))
+lines(density(timber$stiffness[timber$species == "pine"]), col = "red", lwd = 2)
+
+hist(timber$stiffness[timber$species == "gum"], 
+     main = "Gum Stiffness", xlab = "Bending Stiffness (kN·m²)", 
+     col = "lightgreen", border = "black", probability = TRUE, 
+     breaks = seq(6500, 11500, 500), xlim = c(6500, 11500))
+lines(density(timber$stiffness[timber$species == "gum"]), col = "red", lwd = 2)
+points(11124.5, 0, pch = 19, col = "red", cex = 1.5)
+text(11124.5, 0, labels = "11124.5", pos = 3, cex = 0.7, col = "red")
+
+hist(timber$stiffness[timber$species == "cedar"], 
+     main = "Cedar Stiffness", xlab = "Bending Stiffness (kN·m²)", 
+     col = "lightpink", border = "black", probability = TRUE, 
+     breaks = seq(6500, 11500, 500), xlim = c(6500, 11500))
+lines(density(timber$stiffness[timber$species == "cedar"]), col = "red", lwd = 2)
+
+# Reset plot
+par(mfrow = c(1, 1))
+
+
+
+# ============================================
+# 3x1 plotting area
+par(mfrow = c(3, 1), mar = c(4, 4, 2, 2))
+
+# Boxplots with R's outliers
+bp_pine <- boxplot(timber$stiffness[timber$species == "pine"], 
+                   col = "lightblue", border = "black", 
+                   main = "Pine Stiffness", xlab = "Pine", 
+                   ylab = "Bending Stiffness (kN·m²)", 
+                   ylim = c(6500, 11500))
+if (length(bp_pine$out) > 0) {
+  text(x = bp_pine$group, y = bp_pine$out, labels = bp_pine$out, 
+       pos = 3, cex = 0.7, col = "red")
+}
+
+bp_gum <- boxplot(timber$stiffness[timber$species == "gum"], 
+                  col = "lightgreen", border = "black", 
+                  main = "Gum Stiffness", xlab = "Gum", 
+                  ylab = "Bending Stiffness (kN·m²)", 
+                  ylim = c(6500, 11500))
+if (length(bp_gum$out) > 0) {
+  text(x = bp_gum$group, y = bp_gum$out, labels = bp_gum$out, 
+       pos = 3, cex = 0.7, col = "red")
+}
+
+bp_cedar <- boxplot(timber$stiffness[timber$species == "cedar"], 
+                    col = "lightpink", border = "black", 
+                    main = "Cedar Stiffness", xlab = "Cedar", 
+                    ylab = "Bending Stiffness (kN·m²)", 
+                    ylim = c(6500, 11500))
+if (length(bp_cedar$out) > 0) {
+  text(x = bp_cedar$group, y = bp_cedar$out, labels = bp_cedar$out, 
+       pos = 3, cex = 0.7, col = "red")
+}
+
+# Reset plot
+par(mfrow = c(1, 1))
+
+# =========================================++++++++++++++++++++++++================
+# T-test
+
+# Load dplyr for data manipulation
+# library(dplyr)
+
+# Perform pairwise t-tests with Bonferroni correction
+tapply(timber$stiffness, timber$species, sd) # check for group SD
+
+pairwise_results <- pairwise.t.test(timber$stiffness, timber$species, 
+                                    p.adjust.method = "bonferroni", 
+                                    pool.sd = FALSE, # Welch's t-test (unequal variances)
+                                    paired = FALSE,  # Independent samples
+                                    conf.level = 0.95)
+
+# Print the results
+print("Pairwise t-test results with Bonferroni correction:")
+print(pairwise_results)
+
+
+# *****************
+# Pairwise t-tests with Bonferroni adjustment
+pairwise.t.test(timber$stiffness, timber$species,
+                p.adjust.method = "bonferroni")
+                # pool.sd = FALSE)
+                
+
+
+
 
 
 
