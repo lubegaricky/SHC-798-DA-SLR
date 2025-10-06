@@ -125,6 +125,7 @@ text(x = bp$group, y = bp$out, labels = bp$out, pos = 3, cex = 0.7, col = "blue"
 
 
 # Part b)
+# A two-sample t-test
 tapply(curing$strengt, curing$method, sd) # check for group SD
 tapply(curing$strengt, curing$method, var) # check for group var
 # t.test(strength ~ method, data = curing, var.equal = TRUE)

@@ -3,9 +3,9 @@ title: "SHC 798 Assignment 2, 2025"
 author: "Richard Lubega"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document:
     latex_engine: xelatex
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -34,6 +34,40 @@ levels(timber$species)
 
 ## Visualize data
 stripchart(stiffness ~ species, data = timber, pch = 1, vertical = TRUE)
+
+# Summary statistics by species
+summary_stats <- timber %>%
+  group_by(species) %>%
+  summarise(
+    Mean = mean(stiffness),
+    SD = sd(stiffness),
+    Median = median(stiffness),
+    IQR = IQR(stiffness),
+    Q1 = quantile(stiffness, 0.25),
+    Q3 = quantile(stiffness, 0.75),
+    Min = min(stiffness),
+    Max = max(stiffness)
+  )
+
+# Identify outliers using IQR method
+outliers <- timber %>%
+  group_by(species) %>%
+  mutate(
+    Q1 = quantile(stiffness, 0.25),
+    Q3 = quantile(stiffness, 0.75),
+    IQR = Q3 - Q1,
+    Lower_Bound = Q1 - 1.5 * IQR,
+    Upper_Bound = Q3 + 1.5 * IQR,
+    Outlier = stiffness < Lower_Bound | stiffness > Upper_Bound
+  ) %>%
+  filter(Outlier) %>%
+  select(species, stiffness)
+
+# Print summary statistics and outliers
+print("Summary Statistics:")
+print(summary_stats)
+print("Outliers:")
+print(outliers)
 
 # Part a): # Box Plots
 boxplot(stiffness ~ species,
@@ -82,15 +116,15 @@ coef(stiff)       ## be careful with interpretation
 dummy.coef(stiff) ## full coefficients, easier to interpret
 ```
 
-### **Model Interpreation**
+### **Model Interpretation**
 
 *Null hypothesis* (H₀): 𝜇~pine~ = 𝜇~gum~ = 𝜇~cedar~ (All species have the same mean bending stiffness)
 
 *Alternative hypothesis* (H~A~): At least one species has a different mean stiffness.
 
-\*\*F-statistic\*: 32.17; Large F-value indicates that between-species variability is much greater than within-species variability.
+**F-statistic**: 32.17; Large F-value indicates that between-species variability is much greater than within-species variability.
 
-p-value: 4.45 × 10⁻¹⁰;Extremely small (\< 0.001), so we reject H₀ at any conventional significance level (e.g., 0.05 or 0.01).
+**p-value**: 4.45 × 10⁻¹⁰;Extremely small (\< 0.001), so we reject H₀ at any conventional significance level (e.g., 0.05 or 0.01).
 
 **Conclusion**: There is **strong statistical evidence** that the mean bending stiffness differs significantly between timber species.
 
@@ -113,22 +147,20 @@ print(pairwise_results)
 
 ### **Test Interpretation**
 
-\*\*Test method\*: Welch-adjusted pairwise t-tests because the groups have unequal variances. This adjusts the degrees of freedom for each pair according to Welch’s formula.
+**Test method**: Welch-adjusted pairwise t-test because the groups have unequal variances. This adjusts the degrees of freedom for each pair according to Welch’s formula.
 
-N*Null hypothesis* (H₀): 𝜇~pine~ = 𝜇~gum~ = 𝜇~cedar~ (All species have the same mean bending stiffness)
+*Null hypothesis* (H₀): 𝜇~pine~ = 𝜇~gum~ or 𝜇~pine~ = 𝜇~cedar~ or 𝜇~gum~ = 𝜇~cedar~ (mean bending stiffness is the same) and the *alternative hypothesis* (H~A~): Means differ. We reject H₀ if p \< 0.05.
 
-Reject H₀ if p \< 0.05.
+**Interpretation for each pair**
 
-**Interpretation of each pair**
 
-:   **pine vs gum**: p = 8.1 × 10⁻⁸ \< 0.05 → significant; Mean stiffness differs between pine and gum, hence gum is stiffer than pine (looking at raw data: gum ≈ 9500 vs pine ≈ 8100).
+:   **pine vs gum**: p = 8.1 × 10⁻⁸ \< 0.05 (significant) implying that mean stiffness differs between pine and gum, hence gum is stiffer than pine (looking at raw data: gum = 9500 vs pine = 8100).
 
-~ pine vs cedar: p = 6.0 × 10⁻⁸ \< 0.05 → significant, Mean stiffness differs between pine and cedar hence cedar is stiffer than pine (cedar ≈ 9400).
+:   **pine vs cedar**: p = 6.0 × 10⁻⁸ \< 0.05 (significant) implying that mean stiffness differs between pine and cedar hence cedar is stiffer than pine (cedar = 9400).
 
-~ **gum vs cedar*: p = 1 → not significant, No evidence that gum and cedar differ in mean stiffness.
-Their stiffness values are roughly similar (gum ≈ 9500, cedar ≈ 9400).
+:   **gum vs cedar**: p = 1 (not significant) implying that there is no evidence that gum and cedar differ in mean stiffness. Their stiffness values are roughly similar (gum = 9500, cedar = 9400).
 
-Therefore, In practical terms, pine is the softest, while gum and cedar have similar higher stiffness.
+Therefore, practically, pine is the softest whereas gum and cedar have *similar* higher stiffness.
 
 ```{r, Part-1-d}
 # Part d) ## Residual Diagnostics
@@ -137,5 +169,4 @@ plot(stiff, which = 1)
 
 ```
 
-From the residual plots (TA), error variance  is constant and error can be expected to be zero.
-Errors are i.i.d (from Q-Q plot). No autocorrelation.
+From the residual plots (TA), error variance is constant and error can be expected to be zero. Errors are i.i.d (from Q-Q plot). No autocorrelation.
