@@ -17,14 +17,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Analysis of Variance (ANOVA)
 
-### Question 5: Compressive strength for concrete
+### Question 5: # Compressive strength for concrete
 
 ```{r, Part-1-a}
 pacman::p_load(tidymodels)
 
 # Getting started with the dataset in curing.csv :
 curing <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
-curing
+
 head(curing)
 str(curing)
 ## Convert species column to a factor

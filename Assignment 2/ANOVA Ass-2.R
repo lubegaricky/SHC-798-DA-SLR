@@ -8,6 +8,8 @@ timber <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
 # timber
 head(timber)
 str(timber)
+summary(timber)
+
 ## Convert species column to a factor
 timber$species <- factor(timber$species)
 ## Check levels
@@ -30,7 +32,12 @@ boxplot(stiffness ~ species,
 means <- tapply(timber$stiffness, timber$species, mean)
 points(1:3, means, pch = 19, col = "red")
 # Annotate outliers on the plot
-# text(x = bp$group, y = bp$out, labels = bp$out, pos = 2, cex = 0.7, col = "darkblue")
+text(x = bp$group, y = bp$out, labels = bp$out, pos = 2, cex = 0.7, col = "darkblue")
+
+tapply(timber$stiffness, timber$species, range)
+tapply(timber$stiffness, timber$species, function(x) diff(range(x)))
+tapply(timber$stiffness, timber$species, mean)
+
 
 
 # Outliers
