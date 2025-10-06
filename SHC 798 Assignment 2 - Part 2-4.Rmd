@@ -3,9 +3,9 @@ title: "SHC 798 Assignment 2, 2025"
 author: "Richard Lubega"
 date: "`r Sys.Date()`"
 output:
+  html_document: default
   pdf_document:
     latex_engine: xelatex
-  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Analysis of Variance (ANOVA)
 
-### Question 4: \# Compressive strength results
+### Question 4: Timber compressive strength results
 
 ```{r, Part-1-a}
 pacman::p_load(tidymodels)
@@ -124,7 +124,7 @@ dummy.coef(stiff) ## full coefficients, easier to interpret
 
 **F-statistic**: 32.17; Large F-value indicates that between-species variability is much greater than within-species variability.
 
-**p-value**: 4.45 × 10⁻¹⁰;Extremely small (\< 0.001), so we reject H₀ at any conventional significance level (e.g., 0.05 or 0.01).
+**p-value**: 4.45 × 10⁻¹⁰;Extremely small (\< 0.001), so we reject H₀ at all the conventional significance levels like 0.05 and 0.01.
 
 **Conclusion**: There is **strong statistical evidence** that the mean bending stiffness differs significantly between timber species.
 
