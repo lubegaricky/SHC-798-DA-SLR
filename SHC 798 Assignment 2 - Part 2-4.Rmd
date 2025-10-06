@@ -1,0 +1,299 @@
+---
+title: "SHC 798 Assignment 2, 2025"
+author: "Richard Lubega"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# SHC 798 Assignment 2, 2025
+
+## Analysis of Variance (ANOVA)
+
+### Question 4: # Compressive strength results
+
+
+```{r resplot, include=FALSE}
+## Enhanced Function for Residual Plots
+resplot <- function(obj, plots=1:4)
+{
+  ## Coded by: Marcel Dettling, September 18, 2015
+  ## Argument: obj   - a regression fit, i.e. output of R-Function lm()
+  ## Argument: plots - which plots to generate (1=Tukey-Anscombe, 2=Normal, 3=Scale-Location, 4=Leverage)
+  
+  ## Set number of frames in the plot
+  if (length(plots)>=3) par(mfrow=c(2,2))
+  if (length(plots)==2) par(mfrow=c(1,2))
+  if (length(plots)==1) par(mfrow=c(1,1))
+  
+  ## Set random seed that plots look always the same
+  set.seed(21)
+  
+  ## Tukey-Anscombe-Plot with Resampling
+  if (1 %in% plots)
+  {
+    plot(fitted(obj), resid(obj), pch=20, xlab="Fitted Values", ylab="Residuals")
+    title("Tukey-Anscombe-Plot with Resampling")
+    for (i in 1:100) lines(loess.smooth(fitted(obj), sample(resid(obj, replace=TRUE))), col="grey")
+    abline(h=0, lty=2)
+    points(fitted(obj), resid(obj), pch=20); box()
+    lines(loess.smooth(fitted(obj), resid(obj)), col="red")
+  }
+  
+  ## Normal Plot with Resampling
+  if (2 %in% plots)
+  {
+    qq <- qqnorm(rstandard(obj), pch=20, main="Normal Plot with Resampling", ylab="Standardized Residuals")
+    for (i in 1:100) lines(sort(qq$x), sort(rnorm(length(qq$y), mean(qq$y), sd(qq$y))), col="grey")
+    points(qq$x, qq$y, pch=20); box()
+    qqline(rstandard(obj), lty=2)
+  }
+  
+  ## Scale-Location-Plot with Resampling
+  if (3 %in% plots)
+  {
+    plot(fitted(obj), sqrt(abs(rstandard(obj))), pch=20, ylab="sqrt(abs(Standardized Residuals))", xlab="Fitted Values", ylim=c(0, range(sqrt(abs(rstandard(obj))), na.rm=TRUE)[2]), main="Scale-Location with Resampling")
+    for (i in 1:100) lines(loess.smooth(fitted(obj), sample(sqrt(abs(rstandard(obj))), replace=TRUE)), col="grey")
+    points(fitted(obj), sqrt(abs(rstandard(obj))), pch=20); box()
+    lines(loess.smooth(fitted(obj), sqrt(abs(rstandard(obj)))), col="red")
+  }
+  
+  ## Leverage Plot (without Resampling, taken from plot.lm()
+  if (4 %in% plots)
+  {
+    plot(obj, which=5, pch=20, caption="")
+    title("Leverage Plot")
+  }
+}
+
+```
+
+
+```{r, Part-1-a}
+# pacman::p_load(tidymodels)
+
+# Getting started with the dataset in timber.csv :
+timber <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
+# timber
+head(timber)
+str(timber)
+## Convert species column to a factor
+timber$species <- factor(timber$species)
+## Check levels
+levels(timber$species)
+
+## Visualize data
+stripchart(stiffness ~ species, data = timber, pch = 1, vertical = TRUE)
+
+# Part a): # Box Plots
+boxplot(stiffness ~ species,
+        data = timber,
+        main = "Bending Stiffness by Timber Species",
+        xlab = "Timber Species",
+        ylab = "Bending Stiffness (kN·m²)",
+        col = c("lightblue", "lightgreen", "lightpink"),
+        border = "black")
+
+#Adding means as points
+means <- tapply(timber$stiffness, timber$species, mean)
+points(1:3, means, pch = 19, col = "red")
+# Annotate outliers on the plot
+text(x = bp$group, y = bp$out, labels = bp$out, pos = 3, cex = 0.7, col = "darkblue")
+```
+
+#### **Commenting on Variability and Outliers**
+
+In the correlogram (ellipse plot), narrow/elongated ellipses indicate stronger correlation. Energy has elongated ellipses with area (0.5672719) and occupancy (0.71535501), indicating moderate to strong positive correlation. Also, area and occupancy are noticeably correlated with narrow tilted ellipse (0.60076867) which indicates collinearity. Therefore, there is some multicollinearity between area and occupancy, and to a lesser extent between energy and these two variables.
+
+Since all VIF values are very well below 5, there is **no significant multicollinearity** among the predictors for the model, engy_model. This suggests that the predictors can be considered independent of each other for this regression model.
+
+
+
+```{r, Part-1-b}
+# Part b): Model and Predictor Linearity
+# Initial Model Output
+summary(engy_model)
+confint(engy_model)
+confint(engy_model)["(Intercept)", ]
+
+## Residual analysis 1
+plot(engy_model, which=1)
+resplot(engy_model, plots = 1)
+
+plot(engy_model, which = 2)
+resplot(engy_model, plots = 2)
+
+## Scale-location plot
+plot(engy_model, which = 3)
+resplot(engy_model, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model, which = 4)
+plot(engy_model, which = 5)
+resplot(engy_model, plots = 4)
+
+resplot(engy_model)
+
+# Linearity of each predictor - Use of Partial Residual Plots
+pacman::p_load(car)
+crPlots(engy_model)
+crPlots(engy_model, layout = c(1,1))
+
+
+# Transformed Model 1
+engy_model2 <- lm(energy ~ area + log(occup) + climate + glazing + insulation, data = e.consump)
+summary(engy_model2)
+crPlots(engy_model2)
+
+## Residual analysis 2
+plot(engy_model2, which=1)
+resplot(engy_model2, plots = 1)
+
+plot(engy_model2, which = 2)
+resplot(engy_model2, plots = 2)
+
+## Scale-location plot
+plot(engy_model2, which = 3)
+resplot(engy_model2, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model2, which = 4)
+plot(engy_model2, which = 5)
+resplot(engy_model2, plots = 4)
+
+resplot(engy_model2)
+
+# Transformed Model 2
+engy_model3 <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump)
+summary(engy_model3)
+crPlots(engy_model3)
+
+## Residual analysis 3
+plot(engy_model3, which=1)
+resplot(engy_model3, plots = 1)
+
+plot(engy_model3, which = 2)
+resplot(engy_model3, plots = 2)
+
+## Scale-location plot
+plot(engy_model3, which = 3)
+resplot(engy_model3, plots = 3)
+
+## Cook's Distance plot
+plot(engy_model3, which = 4)
+plot(engy_model, which = 5)
+resplot(engy_model3, plots = 4)
+
+resplot(engy_model3)
+```
+
+From the partial plots of the initial/original (engy_model) predictors, the variables area and occupancy clearly deviate from the dotted blue line which indicates non-linearity. 
+In the first transformed model (engy_model2), the linearity of both variables are seen to improve. Also, the model diagnostics are better for this transformed model. From the Adjusted R2, this model also fits the data better (0.7371 > 0.5774) than the original/initial model.
+
+In the second transformed model (engy_model3), the variable linearity, residual plots and model fit are better than both the original and the first transformed model (engy_model2).
+
+Therefore, this model is taken as the most appropriate.
+
+
+```{r, Part-1-c}
+# Part c) Variable Selection starting with the transformed model
+
+# Backward Elimination with AIC
+engy.back <- stats::step(engy_model3, direction="backward")
+summary(engy.back)
+resplot(engy.back)
+
+# AIC Stepwise Model Search: Both Directions Approach
+# starting with the null model
+engy_null <- lm(energy ~ 1, data = e.consump) # Intercept-only model
+sc <- list(lower=engy_null, upper=engy_model3)
+engy.b1 <- stats::step(engy_null, scope = sc, direction = "both")
+summary(engy.b1)
+resplot(engy.b1)
+
+# starting with the full model
+engy.b2 <- stats::step(engy_model3, scope = sc, direction = "both")
+summary(engy.b2)
+resplot(engy.b2)
+
+# starting with a model somewhere in the middle
+engy.mid <- lm(energy ~  climate + glazing, data = e.consump)
+engy.b3<- stats::step(engy.mid, scope = sc, direction = "both")
+summary(engy.b3)
+resplot(engy.b3)
+
+```
+
+In all the reduced models from applying variable selection (i.e., engy.back, engy.b1, engy.b2 and engy.b3), the variable glazing was dropped. There are no major improvements in residual plots for all the models. Also, no noticeable changes on predictor significance or model fit.
+
+
+```{r, Part-1-d}
+# Part d) 5-fold cross validation
+set.seed(123) # Set seed for reproducibility
+n <- nrow(e.consump) # Number of observations and folds
+k <- 5 # Number of folds
+sb <- round(seq(0, n, length = (k + 1)))  # Fold boundaries
+
+# Initialize vectors to store MSPE for each model
+mspe_full <- numeric(k)
+mspe_reduced <- numeric(k)
+
+# 5-fold cross-validation for full model (engy_model3)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]
+  train <- (1:n)[-test]
+  fit_full <- lm(energy ~ log(area) + log(occup) + climate + glazing + insulation, data = e.consump[train, ])
+  pred_full <- predict(fit_full, newdata = e.consump[test, ])
+  mspe_full[i] <- mean((e.consump$energy[test] - pred_full)^2, na.rm = FALSE)
+}
+
+# 5-fold cross-validation for reduced model (dropping glazing)
+for (i in 1:k) {
+  test <- (sb[k + 1 - i] + 1):sb[k + 2 - i]  # Same fold split for comparability
+  train <- (1:n)[-test]
+  fit_reduced <- lm(energy ~ log(area) + log(occup) + climate + insulation, data = e.consump[train, ])
+  pred_reduced <- predict(fit_reduced, newdata = e.consump[test, ])
+  mspe_reduced[i] <- mean((e.consump$energy[test] - pred_reduced)^2, na.rm = FALSE)
+}
+
+# Calculate overall MSPE for each model
+mspe_full_mean <- mean(mspe_full, na.rm = TRUE)
+mspe_reduced_mean <- mean(mspe_reduced, na.rm = TRUE)
+
+# Report results
+cat("MSPE per fold for Full Model:", mspe_full, "\n")
+cat("MSPE per fold for Reduced Model:", mspe_reduced, "\n")
+cat("MSPE for Full Model:", mspe_full_mean, "\n")
+cat("MSPE for Reduced Model:", mspe_reduced_mean, "\n")
+
+# Checking relative increase in MSPE
+relative_increase <- ((mspe_reduced_mean - mspe_full_mean) / mspe_full_mean) * 100
+cat("Relative increase in MSPE (%):", relative_increase, "\n")
+
+# Box plots Using MSPEs
+# Combining MSPEs into a data frame for plotting
+mspe_data <- data.frame(
+  MSPE = c(mspe_full, mspe_reduced),
+  Model = factor(rep(c("Full", "Reduced"), each = k))
+)
+# Generating box plots
+boxplot(MSPE ~ Model, data = mspe_data, 
+        main = "MSPE Comparison: Full vs Reduced Model",
+        ylab = "Mean Squared Prediction Error",
+        col = c("purple", "lightgreen"),
+        border = "black")
+
+```
+
+From the cross-validation exercise, The MSPE for the reduced model is less (-1.275735%) than the full model. Therefore, the variable glazing can be said to reduce the predictive power in model. Therefore, the reduced model is preferable for prediction purposes.
+
+
+
+
