@@ -30,7 +30,7 @@ boxplot(stiffness ~ species,
 means <- tapply(timber$stiffness, timber$species, mean)
 points(1:3, means, pch = 19, col = "red")
 # Annotate outliers on the plot
-text(x = bp$group, y = bp$out, labels = bp$out, pos = 3, cex = 0.7, col = "darkblue")
+# text(x = bp$group, y = bp$out, labels = bp$out, pos = 2, cex = 0.7, col = "darkblue")
 
 
 # Outliers
@@ -68,7 +68,7 @@ dummy.coef(stiff) ## full coefficients, easier to interpret
 
 
 # Part c)
-
+# A pairwise two-sample t-tests (with multiple comparison correction)
 # Perform pairwise t-tests with Bonferroni correction
 tapply(timber$stiffness, timber$species, sd) # check for group SD
 tapply(timber$stiffness, timber$species, var) # check for group var
