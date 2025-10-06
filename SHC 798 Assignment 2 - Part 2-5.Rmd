@@ -91,7 +91,7 @@ t.test(strength ~ method, data = curing, var.equal = FALSE)
 ```{r, Part-1-d}
 # Part d) # practical significance
 
-Mean.diff <- c(41.68667, 35.92000)
+Mean.diff <- 41.68667-35.92000
 print("Difference in means is:")
 print(Mean.diff)
 ```
