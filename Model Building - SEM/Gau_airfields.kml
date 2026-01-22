@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Gauteng_Airfields_With_Runways_Elevations.kml</name>
+    <description>Air navigation facilities in Gauteng (airports, airstrips, military bases). Attributes: ICAO, IATA, Elevation_ft/m, Runway summary.</description>
+
+    <Placemark>
+      <name>O. R. Tambo International Airport (FAOR / JNB)</name>
+      <Point><coordinates>28.246111,-26.139167,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Lanseria International Airport (FALA / HLA)</name>
+      <Point><coordinates>27.926111,-25.939444,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Wonderboom Airport (FAWB / PRY)</name>
+      <Point><coordinates>28.224231,-25.653858,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Rand Airport (FAGM / QRA)</name>
+      <Point><coordinates>28.151389,-26.242778,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Grand Central Airport (FAGC / GCJ)</name>
+      <Point><coordinates>28.140547,-25.986512,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Air Force Base Waterkloof (FAWK)</name>
+      <Point><coordinates>28.230833,-25.823611,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Air Force Base Swartkop (FASK)</name>
+      <Point><coordinates>28.175000,-25.826667,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Brakpan Airport (FABB)</name>
+      <Point><coordinates>28.301667,-26.238611,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Krugersdorp / Jack Taylor Airfield (FAKR)</name>
+      <Point><coordinates>27.770278,-26.096944,0</coordinates></Point>
+    </Placemark>
+
+    <Placemark>
+      <name>Bapsfontein Airfield (FABA)</name>
+      <Point><coordinates>28.466667,-25.983333,0</coordinates></Point>
+    </Placemark>
+
+  </Document>
+</kml>

@@ -1,0 +1,139 @@
+"""
+gauteng_aerodromes_kml.py
+
+Generates a KML file for ~30 Gauteng aerodromes with 10 km exclusion circles (polygons).
+No external libraries required.
+
+Output: gauteng_aerodromes_10km.kml
+Open in Google Earth or Google Earth Pro.
+"""
+
+import math
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+
+# ----- 1) list of aerodromes with DMS coordinate strings (as pulled from GreatCircleMapper) -----
+# Format: (name, lat_dms_str, lon_dms_str)
+AERODROMES = [
+    ("Aero 57 Airport", "25°54'11\"S", "28°4'55\"E"),
+    ("Aeropark Zyn Kraal", "25°54'9\"S", "28°32'50\"E"),
+    ("Aviators Paradise Field", "25°41'38\"S", "27°46'57\"E"),
+    ("Bapsfontein Airport", "25°59'30\"S", "28°24'56\"E"),
+    ("Blue Mountain Valley Airport", "25°51'27\"S", "27°37'39\"E"),
+    ("Brakpan Airport", "26°14'18\"S", "28°18'6\"E"),
+    ("Bronkhorstspruit Airport", "25°46'17\"S", "28°43'36\"E"),
+    ("Carltonville Airport", "26°22'0\"S", "27°20'47\"E"),
+    ("Devon Airport", "26°21'32\"S", "28°47'22\"E"),
+    ("Dunnottar Airport", "26°20'58\"S", "28°26'30\"E"),
+    ("Fly Inn Estate", "25°58'16\"S", "28°21'0\"E"),
+    ("Freeway Airport", "25°28'37\"S", "28°17'24\"E"),
+    ("Grand Central Airport", "25°59'10\"S", "28°8'24\"E"),
+    ("Haakdoornboom Airport", "25°35'13\"S", "28°6'56\"E"),
+    ("Heidelberg Airport", "26°30'36\"S", "28°23'23\"E"),
+    ("Kitty Hawk Airport", "25°51'36\"S", "28°27'0\"E"),
+    ("Klipriver Airfield", "26°28'32\"S", "28°6'39\"E"),
+    ("Krugersdorp Airport", "26°4'51\"S", "27°43'32\"E"),
+    ("Lanseria Airport", "25°56'18\"S", "27°55'33\"E"),
+    ("Mountain View Estate Airfield", "25°51'59\"S", "27°52'38\"E"),
+    ("O. R. Tambo International", "26°8'21\"S", "28°14'45\"E"),
+    ("Orient Glider Airport", "26°2'21\"S", "27°35'44\"E"),
+    ("Panorama Airfield", "26°19'45\"S", "28°4'6\"E"),
+    ("Petit Airport", "26°4'54\"S", "28°23'59\"E"),
+    ("Rand Airport", "26°14'33\"S", "28°9'4\"E"),
+    ("Saffier Airport", "26°45'36\"S", "27°45'36\"E"),
+    ("Springs Airfield", "26°14'54\"S", "28°23'50\"E"),
+    ("Sun Valley Airfield", "26°1'59\"S", "27°53'59\"E"),
+    ("Swartkop (Zwartkop)", "25°48'34\"S", "28°9'52\"E"),
+    ("Syferfontein Airport", "26°20'57\"S", "27°46'45\"E"),
+]
+
+# ----- helpers -----
+def dms_to_decimal(dms_str):
+    """
+    Convert DMS string like 25°54'11"S or 28°4'55"E to decimal degrees (float).
+    """
+    s = dms_str.replace("°", " ").replace("'", " ").replace('"', " ").strip()
+    parts = s.split()
+    # Expecting: deg min sec + hemisphere
+    if len(parts) < 4:
+        raise ValueError(f"Unexpected DMS format: {dms_str}")
+    deg = float(parts[0])
+    minute = float(parts[1])
+    sec = float(parts[2])
+    hemi = parts[3].upper()
+    dec = deg + minute/60.0 + sec/3600.0
+    if hemi in ("S", "W"):
+        dec = -dec
+    return dec
+
+def destination_point(lat_deg, lon_deg, bearing_deg, distance_m):
+    """
+    Compute destination point from lat,lon (degrees) given bearing (deg) and distance (m)
+    using spherical Earth approximation (good for 10km distances).
+    Returns (lat_deg, lon_deg).
+    """
+    R = 6371000.0  # mean Earth radius in meters
+    lat = math.radians(lat_deg)
+    lon = math.radians(lon_deg)
+    brng = math.radians(bearing_deg)
+    dR = distance_m / R
+
+    lat2 = math.asin(math.sin(lat) * math.cos(dR) + math.cos(lat) * math.sin(dR) * math.cos(brng))
+    lon2 = lon + math.atan2(math.sin(brng) * math.sin(dR) * math.cos(lat),
+                            math.cos(dR) - math.sin(lat) * math.sin(lat2))
+    return math.degrees(lat2), math.degrees(lon2)
+
+def pretty_xml(element):
+    """Return pretty-printed XML string for elementtree element."""
+    raw = ET.tostring(element, 'utf-8')
+    reparsed = minidom.parseString(raw)
+    return reparsed.toprettyxml(indent="  ")
+
+# ----- 2) Build KML -----
+kml_ns = "http://www.opengis.net/kml/2.2"
+ET.register_namespace("", kml_ns)
+kml = ET.Element("{%s}kml" % kml_ns)
+doc = ET.SubElement(kml, "Document")
+ET.SubElement(doc, "name").text = "Gauteng_Aerodromes_10km_Exclusion"
+
+# For each aerodrome: create a placemark for the center and one for the circle polygon
+CIRCLE_RADIUS_M = 10000.0  # 10 km
+PTS = 72  # points to approximate circle (72 -> every 5 degrees)
+
+for name, lat_dms, lon_dms in AERODROMES:
+    try:
+        lat = dms_to_decimal(lat_dms)
+        lon = dms_to_decimal(lon_dms)
+    except Exception as e:
+        print(f"Skipping {name} due to coordinate parse error: {e}")
+        continue
+
+    # Placemark: center point
+    pm = ET.SubElement(doc, "Placemark")
+    ET.SubElement(pm, "name").text = name + " (center)"
+    ET.SubElement(pm, "description").text = f"{name}\\nLat: {lat:.6f}, Lon: {lon:.6f}"
+    pt = ET.SubElement(pm, "Point")
+    ET.SubElement(pt, "coordinates").text = f"{lon:.6f},{lat:.6f},0"
+
+    # Placemark: circle polygon
+    pmc = ET.SubElement(doc, "Placemark")
+    ET.SubElement(pmc, "name").text = name + " - 10 km exclusion"
+    ET.SubElement(pmc, "styleUrl").text = ""  # can add style later
+    poly = ET.SubElement(pmc, "Polygon")
+    ET.SubElement(poly, "tessellate").text = "1"
+    outer = ET.SubElement(poly, "outerBoundaryIs")
+    lin = ET.SubElement(outer, "LinearRing")
+    coord_lines = []
+    for i in range(PTS+1):  # close the circle by repeating first point
+        bearing = (360.0 / PTS) * i
+        latc, lonc = destination_point(lat, lon, bearing, CIRCLE_RADIUS_M)
+        coord_lines.append(f"{lonc:.6f},{latc:.6f},0")
+    ET.SubElement(lin, "coordinates").text = " ".join(coord_lines)
+
+# Write to file
+kml_str = pretty_xml(kml)
+output_filename = "gauteng_aerodromes_10km.kml"
+with open(output_filename, "w", encoding="utf-8") as f:
+    f.write(kml_str)
+
+print(f"KML written to {output_filename}")
