@@ -19,10 +19,25 @@ head(trajectory)
 summary(trajectory)
 str(trajectory)
 
+# Separating
 traj.1 <- read.table(file.choose(),
                  sep = ";",
                  header = TRUE,
                  stringsAsFactors = FALSE,
                  strip.white = TRUE)
+head(traj.1)
+summary(traj.1)
+str(traj.1)
 
+# Tidyverse alternative (recommended for robustness)
+
+pacman::p_load(readr)
+
+gates <- read_delim(file.choose(),
+                 delim = ";",
+                 trim_ws = TRUE)
+
+summary(gates)
+head(gates)
+str(gates)
 
