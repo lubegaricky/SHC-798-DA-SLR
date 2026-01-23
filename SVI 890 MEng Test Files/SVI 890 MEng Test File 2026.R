@@ -20,6 +20,18 @@ summary(trajectory)
 str(trajectory)
 
 # Separating
+
+traj.1 <- read.delim(file.choose(),
+                   sep = ";",
+                   header = TRUE,
+                   stringsAsFactors = FALSE,
+                   strip.white = TRUE,
+                   fill = TRUE)
+traj.1 <- traj.1[, names(df) != ""]
+head(traj.1)
+summary(traj.1)
+str(traj.1)
+
 traj.1 <- read.table(file.choose(),
                  sep = ";",
                  header = TRUE,
@@ -36,8 +48,28 @@ pacman::p_load(readr)
 gates <- read_delim(file.choose(),
                  delim = ";",
                  trim_ws = TRUE)
-
+gates <- gates[, names(df) != ""]
 summary(gates)
 head(gates)
 str(gates)
+
+# Explore
+# library(dplyr)
+
+traj.1 %>%
+  summarise(across(everything(), class)) %>%
+  pivot_longer(everything(),
+               names_to = "Variable",
+               values_to = "Class")
+
+
+gates %>%
+  summarise(across(everything(), class)) %>%
+  pivot_longer(everything(),
+               names_to = "Variable",
+               values_to = "Class")
+
+
+# ===============================
+# 'Trials'
 
