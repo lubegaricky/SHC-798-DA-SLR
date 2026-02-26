@@ -2,7 +2,7 @@
   
 
 # ================================
-# Getting started with the dataset in concrete.csv :
+# Getting started with the dataset :
 pacman::p_load(ggplot2) 
 pacman::p_load(tidymodels)
 
@@ -38,8 +38,7 @@ traj.1 <- read.table(file.choose(),
                  stringsAsFactors = FALSE,
                  strip.white = TRUE)
 head(traj.1)
-summary(traj.1)
-str(traj.1)
+
 
 # Tidyverse alternative (recommended for robustness)
 
@@ -72,4 +71,22 @@ gates %>%
 
 # ===============================
 # 'Trials'
+traj.1 <- read.table(file.choose(),
+                     sep = ";",
+                     header = FALSE,
+                     skip = 1,
+                     fill = TRUE,
+                     stringsAsFactors = FALSE,
+                     strip.white = TRUE)
+
+# Add column names for the first 8 fixed columns
+colnames(traj.1)[1:8] <- c("Track_ID", "Type", "Entry_Gate", "Entry_Time_s", 
+                           "Exit_Gate", "Exit_Time_s", "Traveled_Dist_px", "Avg_Speed_kpxh")
+
+# header = FALSE + skip = 1 — skips the header row manually to avoid the column count mismatch
+
+head(traj.1)
+summary(traj.1)
+str(traj.1)
+
 
