@@ -869,9 +869,29 @@ pairwise.t.test(timber$stiffness, timber$species,
                 # pool.sd = FALSE)
                 
 
+# New Draft Code
+# ===============================================================
+# Coordinate System Conversion; UTM to WGS-84
+# Create dataframe
+df <- data.frame(
+  Point = "GR1",
+  Easting = 626230.12,
+  Northing = 7152349.14
+)
 
+# Convert to spatial object (UTM Zone 35S = EPSG:32735)
+sf_points <- st_as_sf(df, coords = c("Easting", "Northing"), crs = 32735)
 
+# Transform to WGS84 (lat/long)
+latlon <- st_transform(sf_points, crs = 4326)
 
+# Extract coordinates
+coords <- st_coordinates(latlon)
+
+df$Longitude <- coords[,1]
+df$Latitude  <- coords[,2]
+
+df
 
 
 
