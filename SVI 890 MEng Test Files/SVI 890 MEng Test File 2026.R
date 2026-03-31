@@ -101,7 +101,7 @@ str(UTM)
 # Convert UTM (Zone 35S) to WGS84 (Lat/Long)
 # Convert to sf object
 UTM_sf <- st_as_sf(UTM,
-                   coords = c("UTM_X", "UTM_Y"),
+                   coords = c(UTM_X, UTM_Y),
                    crs = 32735)   # EPSG:32735 = UTM Zone 35 South (WGS84)
 
 # Transform to WGS84 (EPSG:4326)
@@ -114,12 +114,45 @@ coords <- st_coordinates(WGS84_sf)
 UTM$Longitude <- coords[,1]
 UTM$Latitude  <- coords[,2]
 
-# 3️⃣ Export to CSV with semicolon delimiter
+# Export to CSV with semicolon delimiter
 write.table(UTM,
-            file = "UTM_to_WGS84.csv",
+            file = "UTM_to_WGS84_R01.csv",
             sep = ";",
             row.names = FALSE)
 
 # -------------------------------------------------
 
+# New File for DFS
 
+# library(dplyr)
+
+# Browse and load File 1
+UTM_DFS1 <- read.csv(file.choose(), header = TRUE, strip.white = TRUE)
+U_DFS
+
+# Browse and load File 2
+UTM_DFS2 <- read.csv(file.choose(), header = TRUE, check.names = FALSE, strip.white = TRUE)
+head(UTM_DFS2)
+summary(UTM_DFS2)
+str(UTM_DFS2)
+
+# Combine (join using Tag)
+U_DFS <- UTM_DFS1 %>%
+  left_join(UTM_DFS2, by = "Tag") %>%
+  select(Tag, UTM_X, UTM_Y, `UTM Zone`, `UTM Hemisphere`, `Image X`, `Image Y`) %>%
+  rename(`UTM X` = UTM_X,
+         `UTM Y` = UTM_Y)
+
+# View combined dataframe before exporting
+head(U_DFS)
+summary(U_DFS)
+str(U_DFS)
+print(U_DFS)
+View(U_DFS)  
+
+
+# Export with semicolon separator
+write.table(U_DFS, "DFS_UTM_2.csv",
+            sep = "; ",
+            row.names = FALSE,
+            quote = FALSE)
