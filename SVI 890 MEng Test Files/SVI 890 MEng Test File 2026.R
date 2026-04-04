@@ -3,7 +3,7 @@
 
 # ================================
 # Getting started with the dataset :
-pacman::p_load(ggplot2) 
+pacman::p_load(ggplot2)
 pacman::p_load(tidymodels)
 
 # Data Preparation
@@ -13,7 +13,7 @@ pacman::p_load(gridExtra)
 
 # Read the test data (it is a .CSV file)
 # Getting started with the dataset in trajectory data :
-trajectory <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"))
+trajectory <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
 # trajectory
 head(trajectory)
 summary(trajectory)
