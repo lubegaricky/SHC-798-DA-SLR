@@ -8,13 +8,17 @@
 #   • Produce a perfect wide CSV with no misplaced rows
 #   • Then converts to **LONG format** (best for analysis)
 
-library(data.table)
-pacman::p_load(tidymodels)
-# library(dplyr)
+pacman::p_load(data.table)
+pacman::p_load(tidyverse)
+# pacman::p_load(tidymodels)
+# pacman::p_load(dplyr)
 # library(tidyr)
+search() #give list of attached packages
 
 # traj_4_4 <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
 traj_4_4 <- "Trajectories 04-04.csv"
+getwd()
+list.files()
 # ------------------------------------------------
 # Step 1: Read line-by-line and merge continuation rows
 # ------------------------------------------------
@@ -33,14 +37,14 @@ for (line in data_lines) {
   track_id_str <- fields[1]
   type_str     <- fields[2]
   
-  # Rule you gave: valid start = numeric Track ID + proper Type
+# Rule you give: valid start = numeric Track ID + proper Type
   is_valid_start <- grepl("^[0-9]+$", track_id_str) && 
     !is.na(type_str) && 
     type_str %in% c("Car", "Medium Vehicle", "Heavy Vehicle", 
                     "Pedestrian", "Bicycle", "Motorcycle")
   
   if (is_valid_start) {
-    # Save previous record if it exists
+# Save previous record if it exists
     if (current_line != "") {
       clean_lines <- c(clean_lines, current_line)
     }
@@ -60,16 +64,16 @@ if (current_line != "") {
 }
 
 # Write the perfectly fixed wide CSV
-fixed_file <- "Trajectories_04-04_FIXED.csv"
-writeLines(c(header, clean_lines), fixed_file)
+New_traj_04 <- "Trajectories_04-04_New.csv"
+writeLines(c(header, clean_lines), New_traj_04)
 
-cat("✅ Fixed file created:", fixed_file, "\n")
+cat(" Fixed file created:", New_traj_04, "\n")
 cat("   Number of clean tracks:", length(clean_lines), "\n\n")
 
 # ------------------------------------------------
 # Step 2: Read the now-perfect wide file
 # ------------------------------------------------
-df_wide <- fread(fixed_file, header = TRUE, fill = TRUE, stringsAsFactors = FALSE)
+df_wide <- fread(New_traj_04, header = TRUE, fill = TRUE, stringsAsFactors = FALSE)
 
 # Make column names R-friendly
 colnames(df_wide) <- make.names(colnames(df_wide), unique = TRUE)
@@ -116,7 +120,7 @@ long_df <- df_wide %>%
   ) %>%
   select(`Track ID`, Type, `Score [%]` = Score...., everything())
 
-# ------------------------------------------------
+  # ------------------------------------------------
 # Step 5: Save clean files
 # ------------------------------------------------
 fwrite(long_df,  "Trajectories_04-04_CLEAN_LONG.csv",  row.names = FALSE)
@@ -129,3 +133,80 @@ cat("Total tracks:", length(unique(long_df$`Track ID`)), "\n")
 cat("Total time points:", nrow(long_df), "\n\n")
 
 cat("Your UTM coordinates (x [m], y [m]) are now 100% clean and ready to merge with your earlier Tag/Image files.\n")
+
+
+
+# ======================================================================
+# Other trial code
+
+# Separating
+
+# traj.1 <- read.delim(file.choose(),
+#                    sep = ";",
+#                    header = TRUE,
+#                    stringsAsFactors = FALSE,
+#                    strip.white = TRUE,
+#                    fill = TRUE)
+# traj.1 <- traj.1[, names(df) != ""]
+# head(traj.1)
+# summary(traj.1)
+# str(traj.1)
+# 
+# traj.1 <- read.table(file.choose(),
+#                  sep = ";",
+#                  header = TRUE,
+#                  stringsAsFactors = FALSE,
+#                  strip.white = TRUE)
+# head(traj.1)
+
+
+# Tidyverse alternative (recommended for robustness)
+# Crosssing Events
+
+# pacman::p_load(readr)
+# 
+# gates <- read_delim(file.choose(),
+#                  delim = ";",
+#                  trim_ws = TRUE)
+# gates <- gates[, names(df) != ""]
+# summary(gates)
+# head(gates)
+# str(gates)
+
+# Explore
+# library(dplyr)
+# 
+# traj.1 %>%
+#   summarise(across(everything(), class)) %>%
+#   pivot_longer(everything(),
+#                names_to = "Variable",
+#                values_to = "Class")
+# 
+# 
+# gates %>%
+#   summarise(across(everything(), class)) %>%
+#   pivot_longer(everything(),
+#                names_to = "Variable",
+#                values_to = "Class")
+# 
+
+# ===============================
+# 'Trials'
+# traj.1 <- read.table(file.choose(),
+#                      sep = ";",
+#                      header = FALSE,
+#                      skip = 1,
+#                      fill = TRUE,
+#                      stringsAsFactors = FALSE,
+#                      strip.white = TRUE)
+# 
+# # Add column names for the first 8 fixed columns
+# colnames(traj.1)[1:8] <- c("Track_ID", "Type", "Entry_Gate", "Entry_Time_s", 
+#                            "Exit_Gate", "Exit_Time_s", "Traveled_Dist_px", "Avg_Speed_kpxh")
+# 
+# # header = FALSE + skip = 1 — skips the header row manually to avoid the column count mismatch
+# 
+# head(traj.1)
+# summary(traj.1)
+# str(traj.1)
+# 

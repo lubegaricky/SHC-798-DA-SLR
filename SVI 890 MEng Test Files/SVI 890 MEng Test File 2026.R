@@ -2,92 +2,10 @@
   
 
 # ================================
-# Getting started with the dataset :
-pacman::p_load(ggplot2)
-pacman::p_load(tidymodels)
-
-# Data Preparation
-
-# Load required libraries
+pacman::p_load(tidyverse)
+# pacman::p_load(tidymodels)
 pacman::p_load(gridExtra)
-
-# Read the test data (it is a .CSV file)
-# Getting started with the dataset in trajectory data :
-trajectory <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
-# trajectory
-head(trajectory)
-summary(trajectory)
-str(trajectory)
-
-# Separating
-
-traj.1 <- read.delim(file.choose(),
-                   sep = ";",
-                   header = TRUE,
-                   stringsAsFactors = FALSE,
-                   strip.white = TRUE,
-                   fill = TRUE)
-traj.1 <- traj.1[, names(df) != ""]
-head(traj.1)
-summary(traj.1)
-str(traj.1)
-
-traj.1 <- read.table(file.choose(),
-                 sep = ";",
-                 header = TRUE,
-                 stringsAsFactors = FALSE,
-                 strip.white = TRUE)
-head(traj.1)
-
-
-# Tidyverse alternative (recommended for robustness)
-
-pacman::p_load(readr)
-
-gates <- read_delim(file.choose(),
-                 delim = ";",
-                 trim_ws = TRUE)
-gates <- gates[, names(df) != ""]
-summary(gates)
-head(gates)
-str(gates)
-
-# Explore
-# library(dplyr)
-
-traj.1 %>%
-  summarise(across(everything(), class)) %>%
-  pivot_longer(everything(),
-               names_to = "Variable",
-               values_to = "Class")
-
-
-gates %>%
-  summarise(across(everything(), class)) %>%
-  pivot_longer(everything(),
-               names_to = "Variable",
-               values_to = "Class")
-
-
-# ===============================
-# 'Trials'
-traj.1 <- read.table(file.choose(),
-                     sep = ";",
-                     header = FALSE,
-                     skip = 1,
-                     fill = TRUE,
-                     stringsAsFactors = FALSE,
-                     strip.white = TRUE)
-
-# Add column names for the first 8 fixed columns
-colnames(traj.1)[1:8] <- c("Track_ID", "Type", "Entry_Gate", "Entry_Time_s", 
-                           "Exit_Gate", "Exit_Time_s", "Traveled_Dist_px", "Avg_Speed_kpxh")
-
-# header = FALSE + skip = 1 — skips the header row manually to avoid the column count mismatch
-
-head(traj.1)
-summary(traj.1)
-str(traj.1)
+search() #give list of attached packages
 
 
 # Coordinate System Conversion
@@ -124,13 +42,11 @@ write.table(UTM,
 
 # New File for DFS
 
-# library(dplyr)
-
-# Browse and load File 1
+# Browse and load File 1 (UTM_DFS1)
 UTM_DFS1 <- read.csv(file.choose(), header = TRUE, strip.white = TRUE)
 U_DFS
 
-# Browse and load File 2
+# Browse and load File 2 (UTM_DFS2)
 UTM_DFS2 <- read.csv(file.choose(), header = TRUE, check.names = FALSE, strip.white = TRUE)
 head(UTM_DFS2)
 summary(UTM_DFS2)
@@ -156,3 +72,16 @@ write.table(U_DFS, "DFS_UTM_2.csv",
             sep = "; ",
             row.names = FALSE,
             quote = FALSE)
+
+# =============================================================
+# Getting started with the dataset in trajectory data
+# Read the test data (a .CSV file)
+traj_Anth <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
+head(traj_Anth)
+summary(traj_Anth)
+str(traj_Anth)
+
+my_traj <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
+head(my_traj)
+summary(my_traj)
+str(my_traj)
