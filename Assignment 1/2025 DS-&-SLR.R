@@ -798,3 +798,7 @@ plot(log_beam$fitted.values, log_beam$residuals, xlab="Fitted", ylab="Residuals"
   lines(loess.smooth(log_beam$fitted.values, log_beam$residuals),col="red") +
   abline(h=0, col="grey")
 
+
+
+# ============================================================================
+

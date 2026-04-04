@@ -1,0 +1,131 @@
+# ========================================================
+# CLEANING SCRIPT for "Trajectories 04-04.csv"
+# DFS Viewer [Aerial] raw export with split/misplaced rows
+# ========================================================
+#   • Audit EVERY row using "Track ID" and "Type"
+#   • If Track ID is a valid integer AND Type is a valid string → this is a NEW track (not a continuation)
+#   • If NOT → it is a continuation of the previous track → glue its data to the end of the previous row
+#   • Produce a perfect wide CSV with no misplaced rows
+#   • Then converts to **LONG format** (best for analysis)
+
+library(data.table)
+pacman::p_load(tidymodels)
+# library(dplyr)
+# library(tidyr)
+
+# traj_4_4 <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
+traj_4_4 <- "Trajectories 04-04.csv"
+# ------------------------------------------------
+# Step 1: Read line-by-line and merge continuation rows
+# ------------------------------------------------
+lines <- readLines(traj_4_4, warn = FALSE)
+header <- lines[1]
+data_lines <- lines[-1]
+
+clean_lines <- character()
+current_line <- ""
+
+for (line in data_lines) {
+  if (trimws(line) == "") next
+  
+  fields <- trimws(strsplit(line, ",")[[1]])
+  
+  track_id_str <- fields[1]
+  type_str     <- fields[2]
+  
+  # Rule you gave: valid start = numeric Track ID + proper Type
+  is_valid_start <- grepl("^[0-9]+$", track_id_str) && 
+    !is.na(type_str) && 
+    type_str %in% c("Car", "Medium Vehicle", "Heavy Vehicle", 
+                    "Pedestrian", "Bicycle", "Motorcycle")
+  
+  if (is_valid_start) {
+    # Save previous record if it exists
+    if (current_line != "") {
+      clean_lines <- c(clean_lines, current_line)
+    }
+    current_line <- line          # start a brand-new record
+  } else {
+    # Continuation row → append its data
+    if (current_line != "") {
+      continuation <- paste(fields[fields != ""], collapse = ",")
+      current_line <- paste0(current_line, ",", continuation)
+    }
+  }
+}
+
+# Don't forget the very last record
+if (current_line != "") {
+  clean_lines <- c(clean_lines, current_line)
+}
+
+# Write the perfectly fixed wide CSV
+fixed_file <- "Trajectories_04-04_FIXED.csv"
+writeLines(c(header, clean_lines), fixed_file)
+
+cat("✅ Fixed file created:", fixed_file, "\n")
+cat("   Number of clean tracks:", length(clean_lines), "\n\n")
+
+# ------------------------------------------------
+# Step 2: Read the now-perfect wide file
+# ------------------------------------------------
+df_wide <- fread(fixed_file, header = TRUE, fill = TRUE, stringsAsFactors = FALSE)
+
+# Make column names R-friendly
+colnames(df_wide) <- make.names(colnames(df_wide), unique = TRUE)
+
+cat("Columns after fixing:", ncol(df_wide), "\n")
+
+# ------------------------------------------------
+# Step 3: Identify fixed columns vs. time-series columns
+# ------------------------------------------------
+fixed_cols <- c("Track.ID", "Type", "Score....", "Track.Width..m.", 
+                "Track.Width.Displacement..m.", "Track.Length..m.", 
+                "Track.Length.Displacement..m.", "Entry.Gate", 
+                "Entry.Time..s.", "Exit.Gate", "Exit.Time..s.", 
+                "Traveled.Dist...m.", "Avg..Speed..km.h.")
+
+ts_pattern <- "^[xXyY]|Speed|Tan|Lat|Time|Angle"   # matches all time-point columns
+
+# ------------------------------------------------
+# Step 4: Reshape to LONG format (one row = one time point)
+# ------------------------------------------------
+long_df <- df_wide %>%
+  pivot_longer(
+    cols = matches(ts_pattern),
+    names_to = c(".value", "time_point"),
+    names_pattern = "(.*)\\.([0-9]+)$",
+    names_transform = list(time_point = as.integer)
+  ) %>%
+  filter(!is.na(x.m.) & !is.na(y.m.)) %>%           # remove any padding
+  mutate(
+    Track.ID     = as.integer(Track.ID),
+    time_point   = as.integer(time_point),
+    Score....    = as.numeric(Score....),
+    across(contains(c("x.m.", "y.m.", "Speed", "Tan", "Lat", "Time", "Angle")), as.numeric)
+  ) %>%
+  rename(
+    `Track ID`          = Track.ID,
+    `x [m]`             = x.m.,
+    `y [m]`             = y.m.,
+    `Speed [km/h]`      = Speed.km.h.,
+    `Tan. Acc. [ms-2]`  = Tan.Acc..ms.2.,
+    `Lat. Acc. [ms-2]`  = Lat.Acc..ms.2.,
+    `Time [s]`          = Time.s.,
+    `Angle [rad]`       = Angle.rad.
+  ) %>%
+  select(`Track ID`, Type, `Score [%]` = Score...., everything())
+
+# ------------------------------------------------
+# Step 5: Save clean files
+# ------------------------------------------------
+fwrite(long_df,  "Trajectories_04-04_CLEAN_LONG.csv",  row.names = FALSE)
+fwrite(df_wide,  "Trajectories_04-04_CLEAN_WIDE.csv",  row.names = FALSE)
+
+cat("=== CLEANING COMPLETE ===\n")
+cat("• LONG format (recommended):  Trajectories_04-04_CLEAN_LONG.csv\n")
+cat("• WIDE format (original shape): Trajectories_04-04_CLEAN_WIDE.csv\n")
+cat("Total tracks:", length(unique(long_df$`Track ID`)), "\n")
+cat("Total time points:", nrow(long_df), "\n\n")
+
+cat("Your UTM coordinates (x [m], y [m]) are now 100% clean and ready to merge with your earlier Tag/Image files.\n")
