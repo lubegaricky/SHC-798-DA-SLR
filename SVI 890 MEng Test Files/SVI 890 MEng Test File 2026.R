@@ -76,6 +76,11 @@ write.table(U_DFS, "DFS_UTM_2.csv",
 # =============================================================
 # Getting started with the dataset in trajectory data
 # Read the test data (a .CSV file)
+traj_jul <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
+head(traj_jul)
+summary(traj_jul)
+str(traj_jul)
+
 traj_Anth <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.names = FALSE, strip.white = TRUE)
 head(traj_Anth)
 summary(traj_Anth)
@@ -85,3 +90,9 @@ my_traj <- read.csv(file.choose(), header = TRUE, na.strings = c("NA"), check.na
 head(my_traj)
 summary(my_traj)
 str(my_traj)
+
+# ===============================================================
+# Visualisations
+
+
+
