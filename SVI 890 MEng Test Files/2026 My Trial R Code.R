@@ -209,4 +209,100 @@ cat("Your UTM coordinates (x [m], y [m]) are now 100% clean and ready to merge w
 # head(traj.1)
 # summary(traj.1)
 # str(traj.1)
-# 
+
+
+# ---------------------------=======------------------------------
+# Trajectory Dataframe
+
+# # Create final trajectory data frame
+
+library(data.table)     # For fast reading of large CSV files (fread)
+library(dplyr)          # For data manipulation (select, arrange, etc.)
+search()
+# ------------------------------------------------------------------
+# 1. Define the input file
+# ------------------------------------------------------------------
+long_file <- "Trajectories_04-04_New.csv"
+
+# Safety check: Make sure the cleaned file exists before proceeding
+if (!file.exists(long_file)) {
+  stop("Clean long file not found. Please run the cleaning script first.")
+}
+
+# ------------------------------------------------------------------
+# 2. Read the cleaned data
+# ------------------------------------------------------------------
+traj <- fread(long_file, stringsAsFactors = FALSE)
+# Explanation:
+#   - fread() from data.table is much faster and more memory-efficient 
+#     than base R's read.csv() for large files like this one.
+#   - stringsAsFactors = FALSE prevents automatic conversion of text to factors.
+
+# ------------------------------------------------------------------
+# 3. Create the final data frame by selecting only the needed columns
+# ------------------------------------------------------------------
+# final_df <- traj %>%
+#   select(
+#     `Track ID`,
+#     Type,
+#     `x [m]`,
+#     `y [m]`,
+#     `Speed [km/h]`,
+#     `Tan. Acc. [ms-2]`,
+#     `Lat. Acc. [ms-2]`,
+#     `Time [s]`,
+#     `Angle [rad]`
+#   ) %>%
+#   # Sort the data: first by Track ID, then by Time (chronological order)
+#   arrange(`Track ID`, `Time [s]`)
+
+# Explanation of this block:
+#   - `%>%` is the pipe operator: it passes the result of one function 
+#     into the next function.
+#   - select() keeps only the 9 columns you wanted and removes everything else.
+#   - arrange() reorders the rows so that for each Track ID, the time points 
+#     are in increasing order of Time [s]. This is very useful for trajectories.
+
+# ------------------------------------------------------------------
+# 4. Print summary information
+# ------------------------------------------------------------------
+cat("Final data frame created successfully!\n")
+cat("Number of tracks:", n_distinct(final_df$`Track ID`), "\n")
+cat("Total time points (rows):", nrow(final_df), "\n")
+cat("Columns:", paste(names(final_df), collapse = ", "), "\n\n")
+
+# Show the first 6 rows as a preview
+head(final_df)
+
+# ------------------------------------------------------------------
+# 5. Save the final result
+# ------------------------------------------------------------------
+fwrite(final_df, "Trajectories_04-04_FINAL.csv", row.names = FALSE)
+
+cat("✅ Saved as 'Trajectories_04-04_FINAL.csv'\n")
+cat("This file is now ready for analysis, plotting, or merging with your other files.\n")
+
+# =============== Anth-Code ========================
+# Read the file
+my_traj <- read.csv(file.choose(), header = TRUE, check.names = FALSE, strip.white = TRUE)
+
+# Helper: get all column names for a given trajectory field across all points
+traj_field_cols <- function(field, df) {
+  grep(paste0("^", field, " \\d+$"), names(df), value = TRUE)
+}
+
+# Identify the 4 metadata columns needed
+meta_cols <- c("Track ID", "Type", "Traveled Dist. [m]", "Avg. Speed [km/h]")
+
+# Identify all trajectory columns (exclude the spurious unnamed column)
+traj_cols <- grep("^(x \\[m\\]|y \\[m\\]|Speed \\[km/h\\]|Tan\\. Acc\\. \\[ms-2\\]|Lat\\. Acc\\. \\[ms-2\\]|Time \\[s\\]|Angle \\[rad\\]) \\d+$",
+                  names(my_traj), value = TRUE)
+
+# Build traj_df: Track ID + Type + Traveled Dist. + Avg. Speed + all trajectory columns
+traj_df <- my_traj[, c(meta_cols, traj_cols)]
+
+# Write to CSV with semicolon separator
+write.csv2(traj_df, "traj_df.csv", row.names = FALSE)
+write.csv(traj_df, "traj_df2.csv", row.names = FALSE, sep = ";")
+write.table(traj_df, "traj_df3.csv", sep = ";", row.names = FALSE, col.names = TRUE, quote = TRUE)
+  

@@ -92,7 +92,7 @@ summary(my_traj)
 str(my_traj)
 
 # ===============================================================
-# Visualisations
+# Sample Visualisations
 
 
 
