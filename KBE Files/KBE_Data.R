@@ -215,3 +215,100 @@ saveWorkbook(wb, file_path, overwrite = TRUE)
 
 cat("✅ Saved as zone_ftr_g.xlsx\n")
 cat(file_path, "\n")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+# ====================Gemini================
+# 1. Initialize the 124x124 matrix, Elements = 1, except diagonal (i=j) which equals 0
+zone_mat <- matrix(1, nrow = 124, ncol = 124)
+diag(zone_mat) <- 0
+
+# Create the working matrix zone_ftr
+zone_ftr <- zone_mat
+
+# 2. Define helper function to apply factors symmetrically
+apply_factor <- function(mat, origins, destinations, factor) {
+  for (i in origins) {
+    for (j in destinations) {
+      if (i != j) { # Ensure we don't overwrite the diagonal
+        mat[i, j] <- factor
+        mat[j, i] <- factor
+      }
+    }
+  }
+  return(mat)
+}
+
+# --- Define Common Sets ---
+dest_bomboroad <- c(1:7, 9:15, 20:23, 32:33, 38:41, 43, 117:118)
+orig_north_bypass <- c(10, 60:65, 86, 93:94, 111, 113, 117, 119, 121, 122)
+dest_other_stns <- c(45:53, 55:57, 59, 68:70, 72, 95:110, 115, 123:124)
+dest_network_broad <- c(1:3, 8, 12, 14, 17:18, 20:23, 32:33, 40:41, 43, 
+                        19, 24:31, 34:38, 42, 54, 58, 67, 71, 73:76, 79:85, 87:92, 112)
+
+# --- Apply Factors ---
+
+# Bombo Road Section
+zone_ftr <- apply_factor(zone_ftr, c(99, 102), dest_bomboroad, 0.167)
+zone_ftr <- apply_factor(zone_ftr, c(123, 115, 96, 97, 109, 98, 104), dest_bomboroad, 0.200)
+zone_ftr <- apply_factor(zone_ftr, c(45:48, 107, 55, 100:101, 105:106, 103, 95, 110, 124, 52, 51, 50, 49), dest_bomboroad, 0.250)
+zone_ftr <- apply_factor(zone_ftr, c(53, 54, 55, 57), dest_bomboroad, 0.333)
+zone_ftr <- apply_factor(zone_ftr, c(58, 67, 88, 89, 82, 27, 26, 90, 24), dest_bomboroad, 0.500)
+
+# To Zirobwe Section (Destination 108)
+zone_ftr <- apply_factor(zone_ftr, c(123, 115, 96:98, 103), 108, 0.500)
+zone_ftr <- apply_factor(zone_ftr, c(53:55, 57, 68, 74), 108, 0.500)
+zone_ftr <- apply_factor(zone_ftr, c(45:48, 100:101, 105:106, 103, 95, 110, 124, 52, 51, 50), 108, 0.500)
+zone_ftr <- apply_factor(zone_ftr, c(73, 75:78), 108, 0.500)
+zone_ftr <- apply_factor(zone_ftr, c(49, 66, 84, 80, 79, 112, 83, 81, 85, 34, 35), 108, 0.333)
+zone_ftr <- apply_factor(zone_ftr, c(58, 67, 88:89, 82, 27, 26, 90), 108, 0.333)
+zone_ftr <- apply_factor(zone_ftr, c(24, 20, 30, 40), 108, 0.250)
+zone_ftr <- apply_factor(zone_ftr, dest_bomboroad, 108, 0.250)
+
+# Northern By-pass Section
+zone_ftr <- apply_factor(zone_ftr, orig_north_bypass, c(44, 77, 78, 114, 116, 120), 0.333)
+zone_ftr <- apply_factor(zone_ftr, orig_north_bypass, c(4:7, 9, 11, 13, 15, 16, 38, 39, 66, 118), 0.500)
+zone_ftr <- apply_factor(zone_ftr, orig_north_bypass, dest_network_broad, 0.333)
+zone_ftr <- apply_factor(zone_ftr, orig_north_bypass, dest_other_stns, 0.250)
+
+# Other Stations / Network (Red text)
+orig_other_stns <- c(66, 79:81, 83:85, 87, 91:92, 112)
+zone_ftr <- apply_factor(zone_ftr, orig_other_stns, dest_other_stns, 0.500)
+zone_ftr <- apply_factor(zone_ftr, orig_other_stns, dest_network_broad, 0.500)
+
+# Matugga & Kasangati
+zone_ftr <- apply_factor(zone_ftr, c(48, 50, 45, 52, 47, 46, 59, 56, 55, 69:72, 75), 
+                         c(88, 84, 66, 51, 80, 87, 82, 67, 58), 0.500)
+zone_ftr <- apply_factor(zone_ftr, c(54, 58, 97, 74, 82, 27, 28, 34, 35, 88:90, 17), 
+                         c(56, 70, 71, 44, 69, 107), 0.500)
+str(zone_ftr)
+head(zone_ftr)
+summary(zone_ftr)
+view(zone_ftr)
+
+# 3. Write to Excel
+# Define the full file path
+file_path <- "D:/2025 MEng Transportation/SHC-798-DA-SLR/KBE Files/zone_ftr_ge.xlsx"
+# Write the matrix to the specified location
+write.xlsx(as.data.frame(zone_ftr), 
+           file = file_path, 
+           rowNames = FALSE, 
+           colNames = FALSE)
+
+# ------- Saving file with rows and columns as numbers --------------
+# 1. Convert the matrix to a data frame
+final_df <- as.data.frame(zone_ftr)
+
+# 2. Assign the numbers 1 to 124 as both Row and Column names
+rownames(final_df) <- 1:124
+colnames(final_df) <- 1:124
+
+# 3. Define the file path
+file_path <- "D:/2025 MEng Transportation/SHC-798-DA-SLR/KBE Files/zone_ftr_gem.xlsx"
+
+# 4. Write to Excel, ensuring Row and Column names are included
+write.xlsx(final_df, 
+           file = file_path, 
+           rowNames = TRUE,   # This adds the zone numbers to the first column
+           colNames = TRUE)   # This adds the zone numbers to the first row
