@@ -2,6 +2,7 @@ pacman::p_load(tidyverse)
 pacman::p_load(openxlsx)
 search()
 
+# ================== Claude =============================
 n <- 124
 zone_mat <- matrix(1, nrow = n, ncol = n)
 diag(zone_mat) <- 0
@@ -116,9 +117,101 @@ summary(zone_ftr)
 
 # Write to Excel
 wb <- createWorkbook()
-addWorksheet(wb, "zone_ftr")
-writeData(wb, "zone_ftr", zone_ftr, rowNames = TRUE)
-saveWorkbook(wb, "D:/2025 MEng Transportation/SHC-798-DA-SLR/KBE Files/zone_ftr.xlsx", overwrite = TRUE)
+addWorksheet(wb, "zone_ftr_A")
+writeData(wb, "zone_ftr_A", zone_ftr, rowNames = TRUE)
+saveWorkbook(wb, "D:/2025 MEng Transportation/SHC-798-DA-SLR/KBE Files/zone_ftr_A.xlsx", overwrite = TRUE)
 
 cat("Done. Matrix written to zone_ftr.xlsx\n")
 cat("Non-1.0 factor count:", sum(zone_ftr != 1 & zone_ftr != 0), "\n")
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# ========================= Grok ===============================
+# # 1. Create 124 x 124 matrix
+n_zones <- 124
+
+zone_ftr <- matrix(1, nrow = n_zones, ncol = n_zones)
+diag(zone_ftr) <- 0
+
+# Add proper row and column names
+rownames(zone_ftr) <- paste("Zone", 1:n_zones)
+colnames(zone_ftr) <- paste("Zone", 1:n_zones)
+
+# Helper function
+set_factor <- function(origins, destinations, factor) {
+  origins <- unique(unlist(origins))
+  destinations <- unique(unlist(destinations))
+  for (o in origins) {
+    for (d in destinations) {
+      if (o != d) {
+        zone_ftr[o, d] <<- factor
+        zone_ftr[d, o] <<- factor
+      }
+    }
+  }
+}
+
+# Apply Duplicate Factors
+
+# Bombo Road
+set_factor(99:102, c(1:7,9:13,14,15,20,21,22,23,32,33,38:41,43,117,118), 0.167)
+set_factor(c(123,115,96,97,109,98,104), c(1:7,9:13,14,15,20,21,22,23,32,33,38:41,43,117,118), 0.200)
+set_factor(c(45,46,47,48,107,55,100,101,105,106,103,95,110,124,52,51,50,49),
+           c(1:7,9:13,14,15,20,21,22,23,32,33,38:41,43,117,118), 0.250)
+set_factor(c(53,54,55,57), c(1:7,9:13,14,15,20,21,22,23,32,33,38:41,43,117,118), 0.333)
+set_factor(c(58,67,88,89,82,27,26,90,24),
+           c(1:7,9:13,14,15,20,21,22,23,32,33,38:41,43,117,118), 0.500)
+
+# To Zirobwe
+set_factor(c(123,115,96,97,98,103), 108, 0.500)
+set_factor(c(53,54,55,57,68,74), 108, 0.500)
+set_factor(c(45,46,47,48,100,101,105,106,103,95,110,124,52,51,50), 108, 0.500)
+set_factor(c(73,75,76,77,78), 108, 0.500)
+set_factor(c(49,66,84,80,79,112,83,81,85,34,35), 108, 0.333)
+set_factor(c(58,67,88,89,82,27,26,90), 108, 0.333)
+set_factor(c(24,20,30,40), 108, 0.250)
+set_factor(c(1:7,9:13,14,15,20,21,22,23,32,33,39:41,43,117,118), 108, 0.250)
+
+# Northern By-pass
+set_factor(c(10,60,61,62,63,64,65,86,93,94,111,113,117,119,121,122), 
+           c(44,77,78,114,116,120), 0.333)
+set_factor(c(10,60,61,62,63,64,65,86,93,94,111,113,117,119,121,122), 
+           c(4:7,9,11,13,15,16,38,39,66,118), 0.500)
+set_factor(c(10,60,61,62,63,64,65,86,93,94,111,113,117,119,121,122), 
+           c(1,2,3,8,12,14,17,18,20,21,22,23,32,33,40,41,43), 0.333)
+set_factor(c(10,60,61,62,63,64,65,86,93,94,111,113,117,119,121,122), 
+           c(45:52,53,55,56,57,59,68:70,72,95:110,115,123,124), 0.250)
+
+# Other Stations
+set_factor(c(66,79,80,81,83,84,85,87,91,92,112),
+           c(45:52,53,55,56,57,59,68:70,72,95:110,115,123,124), 0.500)
+set_factor(c(66,79,80,81,83,84,85,87,91,92,112),
+           c(1:3,8,12,14,17:18,20:23,32,33,40,41,43,19,24:31,34:39,42,54,58,67,71,73:76,82,85,88,89,90), 0.500)
+
+# Through Matugga & Kasangati
+set_factor(c(45,46,47,48,50,52,55,56,59,69,70,71,72,75),
+           c(51,58,66,67,80,82,84,87,88), 0.500)
+set_factor(c(17,27,28,34,35,54,58,74,82,88,89,90,97),
+           c(44,56,69,70,71,107), 0.500)
+
+str(zone_ftr)
+head(zone_ftr)
+summary(zone_ftr)
+view(zone_ftr)
+
+#  Choose save location and Save to Excel
+file_path <- "D:/2025 MEng Transportation/SHC-798-DA-SLR/KBE Files/zone_ftr_Gr.xlsx"
+
+wb <- createWorkbook()
+addWorksheet(wb, "zone_ftr_Gr")   
+writeData(wb, "zone_ftr_Gr", zone_ftr, 
+          rowNames = TRUE, colNames = TRUE)
+
+setColWidths(wb, "zone_ftr_Gr", cols = 1:125, widths = "auto")
+
+saveWorkbook(wb, file_path, overwrite = TRUE)
+
+cat("✅ Saved as zone_ftr_g.xlsx\n")
+cat(file_path, "\n")
